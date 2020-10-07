@@ -177,17 +177,17 @@ function darkmode(turnOn) { //is used inline in html
     }
 }
 
-function setUrl(id, sec, filterv, text) {
+function setUrl(filterv, id, sec, text) {
     if (id || sec || filterv) {
-        window.location.hash = "#,"+ (id||"") +","+ (sec||"") +","+ (filterv.replace(/,/, " ")||"") +","+ (text||"");
+        window.location.hash = "#,"+ (filterv.replace(/,/, " ")||"") +","+ (id||"") +","+ (sec||"") +","+ (text||"");
     } else {
         window.location.hash = "";
     }
 }
 
 function filter(text) {
-    const [_1, videoid, strsec, filterv, line] = window.location.hash.split(",");
-    setUrl(videoid, strsec, text, line);
+    const [_1, filterv, videoid, strsec, line] = window.location.hash.split(",");
+    setUrl(text, videoid, strsec, line);
 
     var style = '';
     if (text.trim() !== "") {
@@ -344,7 +344,7 @@ function seekVideo(videoid, seconds) {
     setCurrentPlayer(videoid)
     players[videoid].seekTo(seconds, true); //const allowSeekAhead = true
     players[videoid].playVideo();
-    setUrl(videoid, seconds, filterInput.value, getText(videoid, seconds));
+    setUrl(filterInput.value, videoid, seconds, getText(videoid, seconds));
 }
 
 const Z = timeStampClick;//used in inline onlick
@@ -387,7 +387,7 @@ function onYouTubeIframeAPIReady() {
 
 
 function restore() {
-    const [_1, videoid, strsec, filterv] = window.location.hash.split(",");
+    const [_1, filterv, videoid, strsec] = window.location.hash.split(",");
     const sec = Number.parseInt(strsec, 10);
 
     try {
