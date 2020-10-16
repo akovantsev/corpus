@@ -1,0 +1,535 @@
+<body>
+<style type="text/css">
+    body {
+        width: 600px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+    pre {
+        white-space: pre-line;
+    }
+    pre > pre {
+        background-color: #b8e0fc;
+        /*margin-left: 20px;*/
+        /*border-left: 1px dotted black;*/
+        padding: 20px;
+    }
+    blockquote {
+        border-left: 3px solid #b8e0fc;
+        padding-left: 20px;
+        margin-left: 0px;
+    }
+    code {
+        background-color: #b8e0fc;
+    }
+</style>
+
+<a href="https://docs.google.com/document/d/1P6jXX0vZMqKnZHGhB2CMBsPhB3VUlPiM07lcNBE4Op4/">https://docs.google.com/document/d/1P6jXX0vZMqKnZHGhB2CMBsPhB3VUlPiM07lcNBE4Op4/</a>
+from
+<a href="https://awelonblue.wordpress.com/2012/07/01/why-not-events/">https://awelonblue.wordpress.com/2012/07/01/why-not-events/</a>
+
+
+<h1>Discussion of Def. of Events, Declarative</h1>
+<h2> 2013 March, SHELBY Moore and DAVID Barbour </h2>
+
+<h3>SHELBY</h3>
+<pre>
+
+Is an example of declarative state as follows?
+
+if mode and mousedown and joyleft: ...
+
+Where the equivalent event model with local state would be as follows, assuming we have <a href='http://stackoverflow.com/questions/1512930/what-are-scala-continuations-and-why-use-them/13236109#13236109' rel="nofollow">CPS transform for inversion-of-control</a>.
+
+joystate = none
+while true: joystate = wait joychange
+while true: if mode and wait mousedown and joystate == left: ...
+
+The former can be implemented without local state either as a callback that runs periodically (e.g. picosec resolution) with the current states of mouse and joy as inputs, or watching for events on both mouse and joy, with the state of the other as input to the callback.
+
+What I am trying to illustrate is that there is always an event occurring some where in code, the distinction is all about how we express the semantics of the program. <a href='http://copute.com/edu/Intro%20to%20Computers.html#Declarative' rel="nofollow">Declarativity is about tighly coupling intended semantics</a> to the programming model.
+
+</pre>
+<h3>DAVID</h3>
+<pre>
+
+You propose an equivalence <i>between models</i> where there is none. That is a pet peeve of mine. Even <a href="http://awelonblue.wordpress.com/2012/01/03/isomorphism-is-not-enough/" rel="nofollow">isomorphism is not enough</a> to claim such equivalence (but it's a such good place to start). I'll understand you as saying that you preserved the behavior of the declarative expression with the eventful version. More generally, I would accept a premise that there is a behavior-preserving homomorphism from models expressed in your eventless declarative language to models expressed in your eventful language.
+
+The ability to translate an eventless model to an eventful one is insufficient to argue that <i>"there is always an event occurring somewhere in code"</i>. The translated model is not the original model. Many properties of the translated model are not properties of the original model. You cannot legitimately argue that the original model is eventful on basis of the translated model being eventful. One must focus on the abstractions used in the original code. To whatever extent you avoid eventful abstractions, there is (literally) less code you can point at and call eventful. Conversely, to whatever extent you use eventful abstractions (even if you represent events indirectly), you will encounter the problems associated with events.
+
+I reject the popular, vague, useless idea that "intent" has any impact on whether expression of a model is "declarative" or not. My <a href="http://awelonblue.wordpress.com/2012/01/12/defining-declarative/" rel="nofollow">definition for declarative</a> is based on objective, formal properties of expressions. A language can be called declarative based on the extent to which it encourages or enforces declarative expression. (Your `while true` expressions are relatively declarative - commutative, concurrent, reactive. But the language in which they are expressed is not declarative. It takes much discipline, e.g. one `wait` per while loop, to write declarative expressions in your eventful language.)
+
+Tight coupling between intent and semantics is explained by having useful, problem-specific abstractions. Using 'declarative' as a synonym for 'domain specific' seems a waste of a fine word. Whatever correlation you observe between 'declarative' and 'tightly coupled to intent' can be explained very simply: non-declarative languages have extraneous semantic properties, such as order of expression, that poorly align with abstractions in the problem domain.
+
+</pre>
+<h3>SHELBY</h3>
+<pre>
+
+<blockquote>To whatever extent you avoid eventful abstractions, there is (literally) less code you can point at and call eventful.</blockquote>
+
+Correction accepted. Follows an eventful and a non-eventful example.
+
+<pre>if menuishidden and mousedown: showmenu
+else if menuisshown and nothover and mouseup: hidemenu</pre>
+
+<pre>while hover or mousedown: drawmenu</pre>
+
+(The distinction between `drawmenu` and `showmenu` is the former doesn't save the boolean state of whether menu is shown.)
+
+The eventful example is toggling local menu state, thus is not <i>spatial idempotent</i> nor <i>resilient</i>. I refer to your blogs <a href='http://awelonblue.wordpress.com/2011/05/21/comparing-frp-to-rdp/' rel="nofollow">Comparing FRP to RDP</a> and <a href='http://awelonblue.wordpress.com/2012/10/21/local-state-is-poison/' rel="nofollow">Local State is Poison</a>.
+
+It is not enough to feed external state to a FRP, because local state can still be semantically achieved even it is accessed from a pure function.
+
+The non-eventful example depends on a mousedown state change, yet the signal's result (whether menu is drawn) does not depend on catching the exact instant when the mouse went down in order to synchronous all the local state variables (an exponential permutation of complexity).
+
+We should think of the local state variables as infinitesimally small samples of time, whereas the mousedown state variable is pseudo-continuous in time (discrete at greater than the picosec timer resolution).
+
+<blockquote>I reject the popular, vague, useless idea that “intent” has any impact on whether expression of a model is “declarative” or not. My definition for declarative is based on objective, formal properties of expressions.</blockquote>
+
+Disagree. For example, multiple duplicate instances of loop control in any order with same inputs will yield the same outputs, yet it is <a href='http://esr.ibiblio.org/?p=4824&amp;cpage=1#comment-395999' rel="nofollow">less declarative</a> than functionally expressed equivalent. To argue that HTML is less declarative because it doesn't have the unwanted noise of global instance ids seems counter productive to me.
+
+<blockquote>non-declarative languages have extraneous semantic properties, such as order of expression, that poorly align with abstractions in the problem domain</blockquote>
+
+The real culprit appears to be local state (you realized that recently with <i>Local State is Poison</i>), a.k.a. in the real world as bickering over local perspective. Eliminating all global state and order is the antithesis of reality. As a practical existential matter, there is no such thing as global state, because (we can't instantiate infinity so) the <a href='http://grokbase.com/t/gg/scala-debate/12a477eft7/scala-language-re-top-bottom-non-termination-and-their-names/nested/page/3#20121014vm6zr4f7zny4dxxfgic4gkbqyi' rel="nofollow">bottom type is not instantiable</a> (in a strict language and dually for top in a lazy language).
+
+<blockquote>Tight coupling between intent and semantics is explained by having useful, problem-specific abstractions. Using ‘declarative’ as a synonym for ‘domain specific’ seems a waste of a fine word.</blockquote>
+
+Your concern is a conflation of domain-specific declarative with general purpose declarative models, i.e. whether a problem space is domain constrained or general purpose is not related to whether the offered solution is declarative.
+
+</pre>
+<h3>SHELBY</h3>
+<pre>
+
+You don't really want to eliminate events, e.g. your button state change is still an event, rather you want to eliminate callbacks, because they can't be composed without local state and unavoidable ordering (since each callback and local state represents an infinitesimally small period, i.e. a discontinuity).
+
+By feeding the state changes paired with timestamps into a <a href='http://stackoverflow.com/questions/1512930/what-are-scala-continuations-and-why-use-them/13236109#13236109' rel="nofollow">pure function as inputs and receiving any changes in the output</a>, events can be composed over non-infinitesimally small periods of time, i.e. sampling multiple input states over a window of time that smooths the aliasing error in the system.
+
+This has not eliminated events, rather eliminated local state. For example, the output pane of my <a href='http://copute.com/edu/HTML%20Intro.html' rel="nofollow">HTML introduction</a> has to be reparsed on every change to the editor pane. The onchange event is still an event whether it is implemented with a callback, or as a pseudo-continuous state change input to a pure function.
+
+This is why my original comment noted that there is a still an event occurring some where. You are eliminating local state not events. Had you explained it clearly like this last year, it would have saved me a lot of time trying to figure out the essence of your idea. Now that I understand the simplicity and elegance of your idea, I like it.
+
+Hope that helps.
+
+</pre>
+<h3>DAVID</h3>
+<pre>
+
+(Apologies for the five day wait. WordPress thought you were spam.)
+
+Many issues with callbacks are rooted in formal, semantic problems events.
+
+More precisely, <i>sequential, infinitesimal delay</i> is the root of many event evils. Consider: you have time-ordered <code>EventStream a = [(T,a)]</code>, and two streams that respectively contain <code>[(t0,a1),(t0,a2)]</code> and <code>[(t0,b1),(t0,b2)]</code> (representing events infinitesimally offset from t0). To be globally consistent, how you compose these two streams should depend on how they are globally related (e.g. by earlier dup, loop, split). Without that knowledge, merge order is arbitrary and (as mentioned above) event-stream processing abstractions become fragile. Most of the problems I mentioned above (ontology, stateful views, overlapping views, support for open systems and late-arriving observers) still apply.
+
+If you guarantee for every event stream that the event times are computably distinct, then you could avoid many of those issues. The ontology issue is mitigated since you'll now be able to add extra event streams for extra control, rather than making the events on a particular stream larger. But this does result in awkward composition operators (i.e. you can't have zip or merge; you need a composite 'mergeZip'). And the models still require an abundance of local state, and hinder late-arriving observers from catching up.
+
+Rather than communicating a button state change event (which observers must process and remember), I would prefer to communicate current button state (so observers don't need to remember). Where I do need to model events (as for integrating with eventful foreign services), I have idioms to do so - e.g. modeling a time-ordered <i>event log</i> then reporting or influencing the tail-state of this log. Explicit modeling of events doesn't avoid issues with events, but does make them more obvious and addressable per use-case, and helps discourage non-essential use of events.
+
+I really am suggesting we eliminate use of 'event' abstractions, not just of local state.
+
+Regarding your mention of local state: you could go stateless without re-parsing each time, e.g. by use of memoization. Formally, state describes an accumulation of information over time. A memo-cache does not provide semantic access to information from the past, and thus is not stateful. If we are to avoid local state without sacrifice to efficiency, I believe we'll need to walk fine semantic lines regarding memoization, caching, batching, etc..
+
+</pre>
+<h3>DAVID</h3>
+<pre>
+
+Infinitesimals are problematic for a lot of reasons, as I mentioned in <a href="#comment-805" rel="nofollow">my other reply</a>. I would not recommend we think of local state in terms of 'infinitesimals' unless we're integrating continuous signals over time. (If the state is discrete-varying, we don't need infinitesimals. If we aren't integrating or accumulating over time, it isn't formally state.)
+
+Re: <i>multiple duplicate instances of loop control...</i>
+
+For that observation, a structural explanation is sufficient. Just look at the subprograms. A function is composed of functions. A toplevel control-flow loop is composed of control operations. There is no need to invoke "intent" to explain why some languages are more declarative than others.
+
+Re: <i>To argue HTML is less declarative because...</i>
+
+Global instance IDs are a straw man. HTML is less declarative because its structure and composition is neither idempotent nor commutative. HTML is also less declarative because it lacks declarative support for temporal structure, such as animations. Brendan Eich eventually tacked on an awkward, imperative language and API to express the interactive and temporal properties of a document. I have contemplated and partially designed alternatives to HTML, based on Datalog and some carefully constrained temporal logic. I am convinced that a more declarative structure can offer nice properties for composition, mashups, zoomable UIs, streaming or reactive updates, and robust consistency properties.
+
+HTML as it is practiced today is not a screaming success for declarative programming. If it's on topic, I do not consider arguing this to be counter-productive.
+
+Re: <i>The real culprit appears to be local state</i>
+
+Problems attributed to local state regard extensibility, updgrade, persistence. Problems associated with events regard composition, abstraction, integration. The issues are related insofar as event processing models require much intermediate state for expressiveness (e.g. to observe patterns in event streams, or to translate data models that require joining some events), and this intermediate state is typically modeled with local state. It is possible to model event systems that use only external state (e.g. a database, tuple space, or event log). Such event systems lack `new` identities, processes, actors, or objects. However, the problems I described in the article above will still be observable.
+
+Local state is insufficient to explain the issues with event abstractions.
+
+Re: <i>whether a problem space is domain constrained or general purpose is not related to whether the offered solution is declarative</i>
+
+Declarative, as I define it, is a structural property of language or expression. Intent is a property of the programmer. The latter has nothing to do with the former. If your declarative language is low level for your domain (and thus not tightly coupled with intent), it is still a declarative language. If your declarative language is for <i>a different problem domain entirely</i> (and thus not tightly coupled with the problem) - e.g. if you use a declarative graphics language to automate a flamethrower defence - it is still a declarative language. Coupling between intent and semantics is simply irrelevant to whether a language is declarative. I do not conflate domain-specific declarative models with general purpose declarative models. I see the question of 'domain specific' vs. 'declarative' to be conceptually orthogonal.
+
+The reason I mentioned this: on your copute page and elsewhere, you argue that declarative is about tight coupling between semantics and intent. E.g. between saying 'drawmenu' and actually drawing a menu, rather than shooting great balls of fire at the enemy, or requiring a few extra low-level plumbing ops to get the menu drawn. To me, it seems you are using declarative as a near-synonym for domain-specific.
+
+A working definition can't be said to be right or wrong (beyond fitting historical use), just useful or wasteful. I find my definition of 'declarative' very useful: it is objective, it effectively fits languages and APIs people historically consider declarative, and it offers directions (e.g. to judge whether a change in a language or API would make it more declarative or less so). By contrast, I find your definition of 'declarative' to be hand-wavy, subjective, and stepping on the toes of existing terminology. I can't fathom how you or anyone else will benefit from your definition. Perhaps you could explain.
+
+</pre>
+<h3>SHELBY</h3>
+<pre>
+
+DEFINITION OF DECLARATIVE PROGRAMMING
+
+The reason your idempotent and commutative definition of declarative is meaningless to me, is because if there existed a programming language where adding duplicate instances and reordering instances had no effect, then the programming language would always do precisely one behavior for any set of instances regardless of the duplicates and ordering. I have decades of real world experience with programming and I look around me in the real non-programming world, and I can't think of any correlation with that definition of declarativity.
+
+In the real world there are many cases where the order and/or duplication that is present does not matter to the task at hand. For example, it doesn't matter to me what order the 5 potatoes are counted that I need to cook french fries. The declaration is "fetch 5 potatoes". However, I do need to declare "fetch 5 potatoes" before I declare "slice the potatoes". How did it become less declarative in a way that matters, when I just violated the commutative property?
+
+That is why I assert that idempotent and commutative restriction only applies to those details which are not relevant to the semantics. So the order that the potatoes are counted and whether some are exact copies, should not affect the outcome of my "fetch 5" declaration. Thus my language is declarative.
+
+You conflate domain-specific with declarative in the sense that you imply that all languages that are tightly coupled to the semantics of the intended domain, will be declarative. Designing a language to be tightly coupled does not necessarily make it declarative, because this a complex design problem that does not Halt. Domain-specific refers to targeting a language to a domain.
+
+Declarative refers to (the degree of) achieving that target, i.e. how well the domain-specific (or general purpose) language enables one to express only intended order and duplication in the domain (or general purposes) and not unintended order and duplication.
+
+As another evidence that your definition is vacuous and circular, consider that it is possible to code in a low-level declaratively structured language that creates unintended order and duplication in the high-level semantics.
+
+Declarativity is only meaningful in the way I have defined it.
+
+</pre>
+<h3>SHELBY</h3>
+<pre>
+
+DECLARATIVE EVENTS AND LOCAL STATE
+
+A pure function is always benign in composition w.r.t. to any state the caller does not explicitly modify. A non-pure a.k.a. local state is not benign and causes non-declarative reasoning under composition.
+
+I realize that ordering and state also occur with pure functions and the state is stored externally by the caller. The distinction is that such effects can be designed to be declarative, in the way I have defined declarative. Local state paradigm can never be designed to be declarative, because it forces unintended order.
+
+Time-dependent behavior specified declaratively means we don't  accidentally specify the (unintended) ordering (and duplication) that is irrelevant to the semantics we want to express.
+
+So I agree that to be declarative with time-dependent behavior requires not only the elimination of local state, but also the tight coupling of intended time-dependent semantics.
+
+Now we need to find the models for time-dependent semantics which are best fit to the applied domains. No simple task.
+
+The challenge when designing a declarative framework is to maintain the necessary generality because software is alive and never static. New features must not require waiting on a standards committee, e.g. HTML 5.
+
+Software development is accelerating and that technological unemployment shift is the <a href='http://www.mpettis.com/2013/02/21/a-brief-history-of-the-chinese-growth-model/#comment-21647' rel="nofollow">fascinating underlying cause</a> of the current global sovereign debt crisis.
+
+</pre>
+<h3>SHELBY</h3>
+<pre>
+
+MODELING EVENTS MORE DECLARATIVELY
+
+Pondering your comment about the different ways you are thinking about modeling events, e.g. button click, it occurs to me that the problems derive from the time-dependent orders implicit in any stored state.
+
+When we are declarative, we inherently abstract away unnecessary state.
+
+For example, instead of modeling a drag-n-drop operation as `drag on mousedown, loop on mousemove, drop on mouseup`, we can model as `while dragging then drop`. This converts the modal on drag initialization function that sets the new state to a pure function which returns the new state while dragging.
+
+I guess I am realizing that we must define semantics which minimize state and make the unavoidable state very closing coupled to the intended semantics.
+
+For example, if pressing two buttons together gives a different semantic than pressing one followed the other, then we need to have a semantic for modelling a two button press that doesn't require modeling the separate events with local stored state. DAVID mentioned this already.
+
+AFAIK, DAVID's proposed point-free semantics (Arrows) for composing signals is a generalized paradigm for his engine to globally model the multi-signal stream. I still don't have a good metal model how this is beneficial as compared to for example having an API for consuming any two events as a single one over an allowed interval? What little of understand of it, feels very abstracted away from what the programmer wants to declare.
+
+
+</pre>
+<h3>DAVID</h3>
+<pre>
+
+"Fetch five potatoes" is not a declaration. It's a command - literally, an imperative sentence. If it was a declaration, it would be commutative with other declarations, because declarative sentences are commutative (though use of anaphora or contextual phrases like "the potatoes" does require some structure). Violating commutativity of expression is a sure sign that your expressions are less declarative. While it is true it doesn't matter in which order the potatoes are fetched, that has nothing to do with commutativity of language expression, and thus has no impact on whether the language is declarative.
+
+I do not conflate domain specific with declarative. I have accused you of doing so. I wonder if you somehow confused my accusation with a statement of my own opinion. My position: declarative is a relationship between syntax and semantics, having nothing whatsoever to do with domain.
+
+Bad code can be written in any language. Programs expressed in declarative languages can have unintended consequences. For example, rules-based programming or temporal logic programming can easily get away from the programmer. "Declarative" is not, and should not be, a synonym for "good".
+
+</pre>
+<h3>DAVID</h3>
+<pre>
+
+Assume I press and hold the A button, then press and hold the Z button. With button-state signals, I can easily and statelessly compute a signal that represents when both the A button and the Z button are held down. To achieve the same with events would require keeping state for each of the A and Z buttons, updating that state for each change event, and generating an event whenever we move to or from a state of both being down. Regarding your earlier comment, it is worth noting that <i>"consuming any two events as a single one over an allowed time interval"</i> is insufficient for this observation, since the button presses may be separated by a time greater than the allowed interval.
+
+To detect a double-click, state is necessary. This is due to the nature of the problem: a double-click involves conditions that hold at <i>different times</i>. When state is necessary due to the nature of the problem (rather than the paradigm), I call it 'essential'. I do not hesitate to use state where it is essential. I might approach this by continuously recording the button state over time, and concurrently report whenever a double-click pattern is detected in the history. That pattern should be easy to generalize and abstract into an API. If I used button events instead of button state, the pattern wouldn't change much.
+
+Several benefits of signals over events do not regard use of essential state, but rather the avoidance of non-essential state.
+
+This is a point I made repeatedly in the article: event stream processing requires a lot of non-essential state for almost every interesting observation or operation.
+
+</pre>
+<h3>SHELBY</h3>
+<pre>
+
+Your blog does not show me a "reply" button on your latter posts, so I can not reply under them indented properly. So I am forced to quote from your reply, so the reader can correlate which post of yours I am replying to.
+
+<blockquote>“Fetch five potatoes” is not a declaration. It’s a command – literally, an imperative sentence. If it was a declaration, it would be commutative with other declarations, because declarative sentences are commutative</blockquote>
+
+Your reply indicates you've entirely missed my point as to why your definition is circular, because you are now employing that circular strawman.
+
+Any language that is Turing complete will be able to create order and duplication (even where there was a intention to  isolate it, e.g. Haskell with its pure function). Even any non-Turning complete language that accomplishes any real world task will express order.
+
+Thus your definition is impossible, unless you want your language to do precisely nothing.
+
+Whereas my definition is not only possible, it is precisely how we benefit from declarative languages.
+
+Using a correct definition is crucial, because it will impact the design thought about declarative models.
+
+</pre>
+<h3>SHELBY</h3>
+<pre>
+
+Well let me disagree with myself for a moment. I suppose it is theoretically possible to express in a language a structure where all the order in the output is the due to the inputs to the program.
+
+But for the life of me, I can't envision what that could possibly look like in code. It seems like quite an unrealistic definition, unless somehow can explain otherwise in terms that a normal programmer can understand.
+
+We are wasting our time if a normal programmer won't be able to understand it.
+
+</pre>
+<h3>SHELBY</h3>
+<pre>
+
+<blockquote>Regarding your earlier comment, it is worth noting that “consuming any two events as a single one over an allowed time interval” is insufficient for this observation, since the button presses may be separated by a time greater than the allowed interval.</blockquote>
+
+That is not the semantics I intended for the time interval. Rather I meant that the two buttons need to be both down for at least the duration of that time interval for the callback to occur.
+
+So I guess I can answer my own question as to why a functionally compositional model (e.g. Arrows) is superior to a callback model-- local state.
+
+I assume you want to thread the signal through the pure functions instead of involving callbacks and this is because callbacks are not composable due to the modality of state.
+
+And I assume you have some machinery behind those compositions that optimizes the frequency at which the pure functions in the composition are invoked, so not always at picosecond frequency as this would impact performance.
+
+<blockquote>Several benefits of signals over events do not regard use of essential state, but rather the avoidance of non-essential state.
+
+    This is a point I made repeatedly in the article: event stream processing requires a lot of non-essential state for almost every interesting observation or operation.</blockquote>
+
+And you are stating my preferred definition for the declarative property.
+
+It is all about designing the semantics of your model such that it minimizing the use of state and makes these stateful portions explicit in the semantics.
+
+And the other challenge is to produce semantics that normal programmers can understand. I hope you appreciate that perhaps most programmers don't even want compile-time typing, or at least they don't want to think in higher-kinded genericity.
+
+</pre>
+<h3>DAVID</h3>
+<pre>
+
+Definitions aren't arguments. It is a category error to call definitions 'circular' or 'vacuous' as though they were arguments. Definitions are judged largely by utility and consistency with historical and modern usage.
+
+Regarding your other accusations, I believe you have misunderstood <a href="http://awelonblue.wordpress.com/2012/01/12/defining-declarative/" rel="nofollow">my definition of declarative</a>. It is the <i>declarative expressions</i> that are commutative and idempotent. If you have a declarative program, you can rearrange subprograms (the 'declarations') without changing the observable behavior of the program. This does not prevent your declarations from describing an ordering. For example, consider: "Foo is before Bar", "Baz is after Bar". The order of these declarations does not affect their individual or collective meanings. Yet they individually describe order, and collectively imply a larger order: Foo, Bar, Baz.
+
+There are many Turing powerful declarative languages under my definition - e.g. based on temporal logic, rules, multi-level grammars.
+
+</pre>
+<h3>DAVID</h3>
+<pre>
+
+It is not unusual for arrowized models to have local state. E.g. in arrowized FRP, there will often be arrows that represent accumulators or integrals. Some arrowized models carry events. Arrows are very abstract, and fit many diverse languages. The big advantage of arrows is that they're highly composable, which makes it much easier to develop reusable subprograms - components. Callbacks tend to get entangled in a bad way.
+
+Avoiding non-essential state has nothing to do with being declarative (neither by my def nor historically). It's a good practice, though.
+
+</pre>
+<h3>SHELBY</h3>
+<pre>
+
+Changing your example by staying within your logic, the constructors "instance of class Foo exists", "instance of class Bar exists" and "instance of class Baz exists" are declarative expressions because no matter which order which specify them, they are true.
+
+However once I try to combine the above with declaration "Foo destroys Bar", all of the above statements are not longer declarative.
+
+So that is why I say it is vacuous and circular to define the declarative property locally as you have done. It seems to be meaningless. If there was a language where expressions were both individually and compositionally declarative in your definition in the general case, then the program could do only one thing (what was pre-programmed for all combinations).
+
+However, I think I understand what you mean by temporal logic and rules. You want to prove that the declarations are not inconsistent. So the variability of what can be programmed in the language is what can be consistent.
+
+Again I don't see how to apply this to real world of programming. Thus I find your definition to be less useful and also less consistent with history. Perhaps you can find examples of constraint driven declarative programming, but can you tell me one mainstream language that has ever done it? Whereas, I find HTML to be declarative. I find the spreadsheet formulars to be declarative. They often do exactly what I declare it to do (other than inconsistencies between browsers and poor design of some aspects of CSS, etc).
+
+Actually I think there are parallels between our two definitions. For example, one way we obtain declarativity in the way I defined it, is by enforcing the rules of a category, e.g. for Applicative. This ensures that many corner cases of inconsistency don't occur.
+
+So perhaps the difference is our definitions is that yours is focused on absolute fitness to consistency, which is why you focus on the local level definition. And mine is focused on the realistic degree of consistency in real world programming.
+
+In fact, I think that is exactly the conclusion. So for me, yours is vacuous because it is not as well connected with reality.
+
+Arguing about the fitness of a definition is a valid activity.
+
+</pre>
+<h3>DAVID</h3>
+<pre>
+
+The ability to represent contradiction does not make expression non-declarative. It doesn't matter whether we say "Foo and Bar cannot coexist" before or after we say "Foo exists" and "Bar exists." The resulting program will have the same contradiction - hence the same <i>meaning</i> - regardless of order. The declarations are commutative.
+
+Contradiction is little different than a type error - i.e. you have some statements that don't make sense together. Many logic languages are designed to prevent such errors, and controlling expression of negation is common. But consistency is not required by my definition of declarative. We can have 'unsafe' declarative languages just as we can have unsafe imperative ones. (I favor safety, but I'm also willing to contemplate controlled forms of inconsistency - e.g. paraconsistency, eventual consistency.)
+
+General purpose declarative programming is not mainstream, but there are examples of it (such as Dedalus variation of Datalog, or some synchronous reactive programming languages). I do agree that HTML is relatively declarative (e.g. when compared to postscript or turtle graphics). Spreadsheets are declarative. I think CSS is mostly declarative, but I haven't used the language.
+
+<blockquote>perhaps the difference is our definitions is that yours is focused on absolute fitness to consistency</blockquote>
+
+It isn't.
+
+My <a href="http://awelonblue.wordpress.com/2012/01/12/defining-declarative/" rel="nofollow">definition for declarative</a> programming is simply that our programs are (syntactically) composed of expressions (subprograms) that have properties of declarative sentences (e.g. commutativity, idempotence, continuous nature). This definition is objective, simple, and effectively discriminates many languages historically considered 'declarative' from those that are not. Consistency, state, ordering or duplication in the program output, etc. are concerns but have never been part of that definition.
+
+I can't say much about your definition of declarative. It seems to change every few comments you make (recently "minimizing use of state and making the stateful portions explicit", earlier "express only intended order and duplication in the domain", and even earlier "tightly coupling intended semantics"). So far, your definitions are contextual (referring to the problem) or subjective (referring to programmer intentions), which makes me doubt their fitness.
+
+</pre>
+<h3>SHELBY</h3>
+<pre>
+
+Again there is no reply button nor link on your post of 2013 March 10 at 9 am, so I must reply outdented at the bottom of the page.
+
+<blockquote>The ability to represent contradiction does not make expression non-declarative.</blockquote>
+
+In your definition, which is precisely my reason for thinking it is vacuous.
+
+Your definition is focused on some low-level relationships (e.g. commutativity and idempotence) between expressions which without consistency has no high-level semantic contextual relevance.
+
+AFAICS, you have a circular logic as follows.
+
+Commutativity and idempotence w.r.t. to what? How do we prove they have those properties?
+
+If expressions don't need to have an contextual consistency, then you definition means nothing. I can declare any expression and then say it is declarative. Why is "fetch 5" not declarative ("a command") in your mind? Is it because you think it requires we do something with the items fetched, thus has a dependency on another expression? How is that dependency different from contextual consistency?
+
+I understand you wish to declare an objective orthogonal property to consistency. And that is precisely what my definition of the declarative property does.
+
+My definition is differentiating between operational and denotational semantics in that the operational details which are not expressing denotational semantics, i.e. the implementation details, should obey your low-level relationships  (e.g. commutativity and idempotence) w.r.t. to the denotational semantics. And this is why I currently thinking to favor pure functional programming and category theory.
+
+And please tell me how any prior declarative language did not adhere to my definition?
+
+<blockquote>Contradiction is little different than a type error</blockquote>
+
+Agreed, the denotational semantics occur at the level of typing.
+
+
+</pre>
+<h3>DAVID</h3>
+<pre>
+
+(meta) You can reply to the last comment that provides the reply option in a thread. It won't indent further, but will be ordered. The indent limit should be a warning that you're using the wrong forum. The reactive-demand google group would be a better place to host this discussion.
+
+Commutativity and idempotence of declarative expressions are with respect to meaning, i.e. observable program behavior. As far as I'm concerned, a runtime or compile-time output of `<code>Error: nonsense</code>` is <i>just another possible meaning.</i> Consistency is a valuable property and well worth reasoning about, but is not necessary to answer <i>"w.r.t. what?"</i> It is not wishful thinking that has me claiming 'consistent' is orthogonal to 'declarative'.
+
+<blockquote>the operational details which are not expressing denotational semantics, i.e. the implementation details, should obey your low-level relationships</blockquote>
+
+Your definition of declarative discriminates on hidden implementation details? How is that useful? How would you even know?
+
+</pre>
+<h3>SHELBY</h3>
+<pre>
+
+<blockquote>Commutativity and idempotence of declarative expressions are with respect to meaning, i.e. observable program behavior.</blockquote>
+
+So the mean can't have order and duplication. You are talking in circles.
+
+[edit] Well order can be expressed in the declaration, rather than in the ordering of the declaration, e.g. “Foo position 2″, “Bar position 1″ instead of ["Bar", "Foo"]. But I don’t much benefit to that in the cases where the natural ordering in code is an advantage for clarity against verbosity.
+
+The real issue are the accidental orderings that we can’t see.
+
+<blockquote>Your definition of declarative discriminates on hidden implementation details? How is that useful?</blockquote>
+
+On hidden details make no difference in the intended meaning, i.e. the multiple ways to implement the same output, e.g. an imperative loop verus pure functional recursion.
+
+It is useful because then you know your bugs are coming from order (state) in the implementation of your declarative semantics.
+
+<blockquote>How would you even know?</blockquote>
+
+You know when you fix a bug in implementation details that was accidental ordering that had nothing to do with the declarative semantics.
+
+This comes from real world experience-- something I have 2 - 3 decades of in commercial applications used by millions of users.
+
+</pre>
+<h3>DAVID</h3>
+<pre>
+
+As you seem to have recognized, there is a big difference between "ordering and duplication of the declarative expressions" vs. "ordering and duplication in the program's observable behavior or meaning". Commutativity and idempotence of expression says that the former has no effect on the latter.
+
+I agree that we can avoid verbosity and sometimes improve clarity by use of syntactic ordering - whether it be a list `[foo,bar]`, or a pipeline `foo &gt;&gt;&gt; bar`, or an imperative sequence `foo(); bar()`.
+
+An advantage of making ordering declarative is that it's also much easier to compose with other programs or subprograms. For example, if you have "foo position 1" and "bar position 2", you could <i>non-invasively</i> add "baz position 3" and maybe even "qux position 1.5" (if we treat positions as ordering rather than index). Relative positions would serve more effectively for composition in general, since we'd need less invasive knowledge about the original position numbers. Similarly, temporal aspects can be made explicit. For example, if we have "foo position 1 at time T1" and "foo position 3 at time T2", we can animate a list without requiring a reference to imperatively mutate it.
+
+We can program in mixed styles. We could use implicit ordering where convenient (for terseness or clarity), and declare orderings where we expect we might want composition or animation. Declarative programming isn't a binary quality; it's a sliding scale based on granularity and generality of declarative expression.
+
+<blockquote>The real issue are the accidental orderings that we can’t see.</blockquote>
+
+Accidental ordering is a real issue whether or not you can see it. The <i>visible</i> accidental orderings in procedural programming are often problematic. When ordering is visible but required or implicit in the syntax, you can't tell from semantics (denotational or otherwise) whether an ordering is accidental or not.
+
+<blockquote>hidden [implementation] details make no difference in the intended meaning</blockquote>
+
+AFAICT, you're effectively saying that a language is declarative so long as it correctly implements a denotational semantics.
+
+</pre>
+<h3>SHELBY</h3>
+<pre>
+
+Please allow <a href='https://docs.google.com/document/d/1P6jXX0vZMqKnZHGhB2CMBsPhB3VUlPiM07lcNBE4Op4/edit' rel="nofollow">a link to the prior discussion</a> which you moved from these blog comments to a google doc. I already explained the logic in those comments.
+
+<blockquote>When ordering is visible but required or implicit in the syntax, you can’t tell from semantics (denotational or otherwise) whether an ordering is accidental or not</blockquote>
+
+That is what I mean by "can't see".
+
+<blockquote>AFAICT, you’re effectively saying that a language is declarative so long as it correctly implements a denotational semantics.</blockquote>
+
+No because typing can not (and should not) capture all of the semantics of a program. At the extreme such as Epigram, we lose Turing completeness. In my prior comments, I explained how your definition also similarly degenerates due to inconsistency (either you accept inconsistency or you give up generality with the extreme being a 100% declarative program does precisely only one thing-- that which was preprogrammed in its design).
+
+And the above explains why you still don't get my point that your definition is vacuous. C.f. the Google doc of the removed comments for the logic.
+
+Declarativity has nothing to do with the communitivity of the denotational semantics. It has to do with balancing accidental inconsistency with generality. One of the tools for achieving that is to not allow ordering dependencies in the low-level semantics that are not relevant to the denotational semantics.
+
+</pre>
+<h3>SHELBY</h3>
+<pre> (in e-mail follow up)
+
+If this isn't clear, I can't help you. I will also add this as a new
+answer at stackflow.com
+
+It is up to you are willing to link this from our blog discussion to show
+that you are ethical. I am not going to waste my time fighting with your
+incorrect concept of ethics in blogging. With blogging you have two
+choices, comments or accept all comments that are not spam. You could
+chose to link to discussion forum threads (e.g. google groups) instead of
+allowing comments on the blog page.
+
+http://copute.com/edu/Intro%20to%20Computers.html#Declarative
+
+Declarative
+
+The perfectly declarative property of language is where there is only one
+possible set of statements for each variant of “intended results” a.k.a.
+semantics or meaning.
+
+The antithesis is the imperative property[2], where the same meaning can
+be expressed with different sets of statements.
+
+Thus declarative property often more clearly expresses meaning, yet often
+trading off generality.
+
+For example, a set of formulas in the cells of a spreadsheet program are
+not expected to give the same meaning if moved to different column and row
+cells, because the cell identifiers are part of and not extraneous to the
+intended meaning. So w.r.t. to cell identifiers, spreadsheet programs are
+declarative. However, if it is possible to have two or more sets of
+formulas that give the same meaning to the spreadsheet, so we would
+conclude in that aspect spreadsheet programming is imperative.
+
+An example of a highly declarative static language is Hyper Text Markup
+Language a.k.a. HTML— the language for static web pages. HTML is perhaps
+the easiest language to learn. However, HTML (at least before HTML 5) was
+not able to express changes in the page over time. For dynamic behavior,
+an imperative scripting language such as JavaScript was usually combined
+with HTML.
+
+Some people vacuously define the declarative property to be the
+commutative and idempotent properties of the statements, i.e. that
+statements can be reordered and duplicated without changing the meaning.
+It is generally impossible to design the semantics of (denotational)
+statements so they remain consistent if randomly ordered or duplicated,
+i.e. the statements “Foo exists” and “Foo does not exist”. If one
+considers random inconsistency as part of the intended semantics, then I
+guess one could accept this definition.
+
+To make programs more declarative, it is helpful to choose an operational
+semantics that is deterministic[2] w.r.t. to the commutative and
+idempotent properties, e.g. pure functional programming or recursion
+instead of imperative loops. Then the operational order of the
+implementation details do not impact the consistency of the intended
+semantics. Note however, that it is generally impossible to have perfect
+consistency and determinism between language and intended semantics, i.e.
+the denotational semantics (a.k.a. typing) can never capture all of the
+intended semantics.
+
+C, Java, C++, C#, PHP, and JavaScript aren't particularly declarative.
+Copute's syntax and Python's syntax are more declaratively coupled to
+intended results, i.e. eliminates the extraneous so one can readily
+comprehend code after they've forgotten it. Copute and Haskell enforce
+determinism of the operational semantics and encourage “don't repeat
+yourself”, because they only allow the pure functional paradigm.
+
+---------------------------------------
+
+[2] Many explanations of incorrectly claim that only imperative
+programming has syntactically ordered statements. Where syntactic order is
+not deterministically correlated with the intended semantics, i.e. effects
+manifest randomly correlated to syntactic orderings, this is imperative
+programming. Thus the motivation to use pure functional programming to
+make the operational semantics deterministic. However, remember generally
+it is impossible to extend this orderless property to the denotational
+semantics.
+</pre>
+</body>
