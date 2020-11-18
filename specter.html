@@ -153,10 +153,12 @@ function showDateTimes (datestr) {
 
 function filterDay (el) {
     showDateTimes(el.textContent);
+    el.scrollIntoView({behavior: "smooth", block: "center", inline: "start"});
 }
 
 function filterHours (el) {
-    showDateTimes(el.previousElementSibling.textContent + " " + el.textContent.substring(0, 2))
+    showDateTimes(el.previousElementSibling.textContent + " " + el.textContent.substring(0, 2));
+    el.scrollIntoView({behavior: "smooth", block: "center", inline: "start"});
 }
 
 function forceShowSelected (el) {
