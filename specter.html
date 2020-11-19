@@ -4,6 +4,7 @@
     font-size: 12px;
     margin: 15px;
 }
+h2 {text-align: center}
 pre,
 code {
     font-family: Monaco, Menlo, Consolas, "Courier New", monospace;
@@ -43,37 +44,40 @@ span.t:hover {
     color: blue;
     cursor: pointer
 }
-div:target > span.u {
+div[t]:target > span.u {
     background-color: aquamarine
 }
 
 #filters-container {
     position: fixed;
-    right: 50px;
+    left: 50px;
     z-index: 1;
 }
 #filters-container > input {
     /*column:*/
     display: block;
+    outline-color: aquamarine;
 }
 
-div > a:first-child {
+div[t] > a:first-child {
     text-decoration: none;
     color: blue;
     position: absolute;
     left: 3px;
 }
 
-div > a:first-child:hover {
+div[t] > a:first-child:hover {
     text-decoration: underline;
     color: aquamarine;
 }
 
 
-</style></head><body><style id="css-text-filter"></style><style id="css-date-filter"></style><style id="css-filter-override"></style><h3>#specter, last update time: 2020-11-17 17:42:30</h3><h3>up until: <a href="https://clojurians-log.clojureverse.org/specter/2020-10-27">https://clojurians-log.clojureverse.org/specter/2020-10-27</a></h3><pre>pro tips:
+</style></head><body><style id="css-text-filter"></style><style id="css-date-filter"></style><style id="css-filter-override"></style><p id="filters-container"><input id="text-filter" onkeyup="debtextfilter(this.value)" placeholder="filter text" type="string" /><button hidden="hidden" id="date-filter" onclick="cleardatefilter()"></button></p><h2>#specter</h2><pre><i>generated UTC: 2020-11-19 11:37:54</i><i>
+latest data: <a href="https://clojurians-log.clojureverse.org/specter/2020-10-27">https://clojurians-log.clojureverse.org/specter/2020-10-27</a></i>
+pro tips:
 * Double click on text to filter by it. (doubleclick + cmd-f for extra points).
 * Click on date to keep day visible regardless of filter.
-* Click on time to keep hour visible regardless of filter.</pre><p id="filters-container"><input id="date-filter" onkeyup="debdatefilter(this.value)" placeholder="filter day/hour" type="string" /><input id="text-filter" onkeyup="debtextfilter(this.value)" placeholder="filter text" type="string" /></p><script>const textFilterInput = document.getElementById("text-filter");
+* Click on time to keep hour visible regardless of filter.</pre><script>const textFilterInput = document.getElementById("text-filter");
 const dateFilterInput = document.getElementById("date-filter");
 const filterTextStyle = document.getElementById("css-text-filter");
 const filterDateStyle = document.getElementById("css-date-filter");
@@ -84,7 +88,7 @@ function textFilter(text) {
     if (text.trim() !== '') {
         text.split(' ').forEach(function (t) {
             if (t !== '') {
-                style = style + "div:not([t*='" + t + "' i]) {display: none; opacity: 0.6}";
+                style = style + "div[t]:not([t*='" + t + "' i]) {display: none; opacity: 0.6}";
             }
         });
     }
@@ -117,25 +121,47 @@ function keyUp (e) {
 }
 
 
-function showDateTimes (datestr) {
-    dateFilterInput.value = datestr;
-    var ids = [];
-    var els = document.querySelectorAll("div[t^='" + datestr + "']");
-    var first = els[0];
-    var last = els[els.length - 1];
-    if (first && first.previousElementSibling) {
-        ids.push(first.previousElementSibling.id);
+function showDateTimes (el, datestr) {
+    dateFilterInput.innerText = "clear: " + datestr;
+    dateFilterInput.hidden = false;
+    let ids = [];
+    const clicked = el.parentElement.parentElement;  // el = div#id/span.u/span.t
+    ids.push(clicked.id);
+    // var idbefore, idafter;
+    let cursor = clicked;
+    function nextCursor (cursor) {
+        const id = (cursor && cursor.id);
+        const t = (cursor && cursor.getAttribute("t"))
+        if (id) {
+            ids.push(id); //includes 1st next-id not matching date.
+        } else {
+            cursor = null;
+        }
+        if (t && t.startsWith(datestr)) {
+        } else {
+            cursor = null;
+        }
+        return cursor;
     }
-    els.forEach(function (el){
-        ids.push(el.id);
-    })
-    if (last && last.nextElementSibling) {
-        ids.push(last.nextElementSibling.id);
+    while (cursor) {
+        cursor = nextCursor(cursor.previousElementSibling);
+    }
+
+    cursor = clicked;
+
+    while (cursor) {
+        cursor = nextCursor(cursor.nextElementSibling);
     }
 
 
     var style1 = '';
     var style2 = '';
+    var content;
+    if (datestr.includes(" ")) { //hour
+        content = "*";
+    } else {
+        content = "**";
+    }
     ids.forEach(function (id) {
         if (id) {
             style1 = style1 + ", #" + id;
@@ -146,18 +172,18 @@ function showDateTimes (datestr) {
         style1 = style1.substring(1) + " {display: block !important}";
     }
     if (style2) {
-        style2 = style2.substring(1) + " {content: \"*\"; position: absolute}"
+        style2 = style2.substring(1) + " {content: \"" + content + "\"; position: absolute}"
     }
     filterDateStyle.innerHTML = style1 + "\n" + style2;
 }
 
 function filterDay (el) {
-    showDateTimes(el.textContent);
+    showDateTimes(el, el.textContent);
     el.scrollIntoView({behavior: "smooth", block: "center", inline: "start"});
 }
 
 function filterHours (el) {
-    showDateTimes(el.previousElementSibling.textContent + " " + el.textContent.substring(0, 2));
+    showDateTimes(el,el.previousElementSibling.textContent + " " + el.textContent.substring(0, 2));
     el.scrollIntoView({behavior: "smooth", block: "center", inline: "start"});
 }
 
@@ -176,11 +202,16 @@ function forceShowSelected (el) {
 }
 
 
+function cleardatefilter () {
+    dateFilterInput.hidden = true;
+    dateFilterInput.innerText = "";
+    filterDateStyle.innerHTML = "";
+}
+
 const D = filterDay;
 const H = filterHours;
 const S = forceShowSelected;
 const debtextfilter = debounce1(textFilter, 200);
-const debdatefilter = debounce1(showDateTimes, 200);
 
 function doubleClick (e) {
     if (e.target.tagName !== "INPUT") {
@@ -192,7 +223,7 @@ function doubleClick (e) {
 document.ondblclick = doubleClick;
 document.onkeyup = keyUp;
 textFilterInput.focus();
-</script><div id="t1449315226000007" t="2015-12-05 11:33:46 sveri That logbot follows everywhere I go  😄"><a href="#t1449315226000007" onclick="S(this)">#</a><span class="u"><span class="t" onclick="D(this)">2015-12-05</span> <span class="t" onclick="H(this)">11:33:46</span>                sveri </span><span>That logbot follows everywhere I go </span><b>😄</b></div><div id="t1449843506000012" t="2015-12-11 14:18:26 exupero Is there a way with specter to transform the first element matching a predicate?"><a href="#t1449843506000012" onclick="S(this)">#</a><span class="u"><span class="t" onclick="D(this)">2015-12-11</span> <span class="t" onclick="H(this)">14:18:26</span>              exupero </span><span>Is there a way with specter to transform the first element matching a predicate?</span></div><div id="t1449843777000013" t="2015-12-11 14:22:57 sveri @exupero: I had this working for me:"><a href="#t1449843777000013" onclick="S(this)">#</a><span class="u"><span class="t" onclick="D(this)">2015-12-11</span> <span class="t" onclick="H(this)">14:22:57</span>                sveri </span><span>@exupero: I had this working for me:</span></div><div id="t1449843791000014" t="2015-12-11 14:23:11 sveri  (spec/transform [:new-entity :columns spec/ALL #(= (:id %) id)]
+</script><div><div id="t1449315226000007" t="2015-12-05 11:33:46 sveri That logbot follows everywhere I go  😄"><a href="#t1449315226000007" onclick="S(this)">#</a><span class="u"><span class="t" onclick="D(this)">2015-12-05</span> <span class="t" onclick="H(this)">11:33:46</span>                sveri </span><span>That logbot follows everywhere I go </span><b>😄</b></div><div id="t1449843506000012" t="2015-12-11 14:18:26 exupero Is there a way with specter to transform the first element matching a predicate?"><a href="#t1449843506000012" onclick="S(this)">#</a><span class="u"><span class="t" onclick="D(this)">2015-12-11</span> <span class="t" onclick="H(this)">14:18:26</span>              exupero </span><span>Is there a way with specter to transform the first element matching a predicate?</span></div><div id="t1449843777000013" t="2015-12-11 14:22:57 sveri @exupero: I had this working for me:"><a href="#t1449843777000013" onclick="S(this)">#</a><span class="u"><span class="t" onclick="D(this)">2015-12-11</span> <span class="t" onclick="H(this)">14:22:57</span>                sveri </span><span>@exupero: I had this working for me:</span></div><div id="t1449843791000014" t="2015-12-11 14:23:11 sveri  (spec/transform [:new-entity :columns spec/ALL #(= (:id %) id)]
                                       #(assoc % key val)
                                       @state)``"><a href="#t1449843791000014" onclick="S(this)">#</a><span class="u"><span class="t" onclick="D(this)">2015-12-11</span> <span class="t" onclick="H(this)">14:23:11</span>                sveri </span><code></code><span>(spec/transform [:new-entity :columns spec/ALL #(= (:id %) id)]
                                       #(assoc % key val)
@@ -15182,4 +15213,4 @@ There&apos;s nested maps, and any time there&apos;s an </span><code>:id</code><s
           :url &quot;&quot;
           :required {:name &quot;Conditional Sections E2E Workflow&quot;
                      :application {:name &quot;Conditional Sections&quot;
-                                   :id &quot;var&quot;}}}} ;; &lt;-- updated</pre></div><div id="t1603824237032300" t="2020-10-27 18:43:57 mathpunk but like i said, not generic, seems brittle, gotta know what paths to :id&apos;s exist in order to explicitly supply them"><a href="#t1603824237032300" onclick="S(this)">#</a><span class="u"><span class="t" onclick="D(this)">2020-10-27</span> <span class="t" onclick="H(this)">18:43:57</span>             mathpunk </span><span>but like i said, not generic, seems brittle, gotta know what paths to :id&apos;s exist in order to explicitly supply them</span></div><div id="t1603826040033000" t="2020-10-27 19:14:00 nathanmarz @mathpunk take a look at  recursive-path ,  MAP-VALS , and  stay-then-continue"><a href="#t1603826040033000" onclick="S(this)">#</a><span class="u"><span class="t" onclick="D(this)">2020-10-27</span> <span class="t" onclick="H(this)">19:14:00</span>           nathanmarz </span><span>@mathpunk take a look at </span><code>recursive-path</code><span>, </span><code>MAP-VALS</code><span>, and </span><code>stay-then-continue</code></div><div id="t1603826057033500" t="2020-10-27 19:14:17 nathanmarz you can define a navigator that goes to every nested map, and then from there do your lookup of the id"><a href="#t1603826057033500" onclick="S(this)">#</a><span class="u"><span class="t" onclick="D(this)">2020-10-27</span> <span class="t" onclick="H(this)">19:14:17</span>           nathanmarz </span><span>you can define a navigator that goes to every nested map, and then from there do your lookup of the id</span></div><div id="t1603826107034500" t="2020-10-27 19:15:07 nathanmarz e.g.  (transform [ALL-MAPS (must :id)] (fn [id] (lookup-val-for-id id)) data)"><a href="#t1603826107034500" onclick="S(this)">#</a><span class="u"><span class="t" onclick="D(this)">2020-10-27</span> <span class="t" onclick="H(this)">19:15:07</span>           nathanmarz </span><span>e.g. </span><code>(transform [ALL-MAPS (must :id)] (fn [id] (lookup-val-for-id id)) data)</code></div><div id="t1603826275034800" t="2020-10-27 19:17:55 mathpunk great, thank you!"><a href="#t1603826275034800" onclick="S(this)">#</a><span class="u"><span class="t" onclick="D(this)">2020-10-27</span> <span class="t" onclick="H(this)">19:17:55</span>             mathpunk </span><span>great, thank you!</span></div></body>
+                                   :id &quot;var&quot;}}}} ;; &lt;-- updated</pre></div><div id="t1603824237032300" t="2020-10-27 18:43:57 mathpunk but like i said, not generic, seems brittle, gotta know what paths to :id&apos;s exist in order to explicitly supply them"><a href="#t1603824237032300" onclick="S(this)">#</a><span class="u"><span class="t" onclick="D(this)">2020-10-27</span> <span class="t" onclick="H(this)">18:43:57</span>             mathpunk </span><span>but like i said, not generic, seems brittle, gotta know what paths to :id&apos;s exist in order to explicitly supply them</span></div><div id="t1603826040033000" t="2020-10-27 19:14:00 nathanmarz @mathpunk take a look at  recursive-path ,  MAP-VALS , and  stay-then-continue"><a href="#t1603826040033000" onclick="S(this)">#</a><span class="u"><span class="t" onclick="D(this)">2020-10-27</span> <span class="t" onclick="H(this)">19:14:00</span>           nathanmarz </span><span>@mathpunk take a look at </span><code>recursive-path</code><span>, </span><code>MAP-VALS</code><span>, and </span><code>stay-then-continue</code></div><div id="t1603826057033500" t="2020-10-27 19:14:17 nathanmarz you can define a navigator that goes to every nested map, and then from there do your lookup of the id"><a href="#t1603826057033500" onclick="S(this)">#</a><span class="u"><span class="t" onclick="D(this)">2020-10-27</span> <span class="t" onclick="H(this)">19:14:17</span>           nathanmarz </span><span>you can define a navigator that goes to every nested map, and then from there do your lookup of the id</span></div><div id="t1603826107034500" t="2020-10-27 19:15:07 nathanmarz e.g.  (transform [ALL-MAPS (must :id)] (fn [id] (lookup-val-for-id id)) data)"><a href="#t1603826107034500" onclick="S(this)">#</a><span class="u"><span class="t" onclick="D(this)">2020-10-27</span> <span class="t" onclick="H(this)">19:15:07</span>           nathanmarz </span><span>e.g. </span><code>(transform [ALL-MAPS (must :id)] (fn [id] (lookup-val-for-id id)) data)</code></div><div id="t1603826275034800" t="2020-10-27 19:17:55 mathpunk great, thank you!"><a href="#t1603826275034800" onclick="S(this)">#</a><span class="u"><span class="t" onclick="D(this)">2020-10-27</span> <span class="t" onclick="H(this)">19:17:55</span>             mathpunk </span><span>great, thank you!</span></div></div></body>
