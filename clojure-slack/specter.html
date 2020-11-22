@@ -97,7 +97,7 @@ y:hover {
 }
 
 
-</style></head><body><style id="css-username">w {min-width: 160px;} r {min-width: 192px;}</style><style id="css-text-filter"></style><style id="css-date-filter"></style><style id="css-filter-override"></style><p id="filters-container"><input id="text-filter" onkeyup="debtextfilter(this.value)" placeholder="filter text" type="string" /><button hidden="hidden" id="date-filter" onclick="cleardatefilter()"></button></p><h2>#specter</h2><pre><i>generated UTC: 2020-11-22 15:07</i><i>
+</style></head><body><style id="css-username">w {min-width: 160px;} r {min-width: 192px;}</style><style id="css-text-filter"></style><style id="css-date-filter"></style><style id="css-filter-override"></style><p id="filters-container"><input id="text-filter" onkeyup="debtextfilter(this.value)" placeholder="filter text" type="string" /><button hidden="hidden" id="date-filter" onclick="cleardatefilter()"></button></p><h2>#specter</h2><pre><i>generated UTC: 2020-11-22 15:14</i><i>
 latest data: <a href="https://clojurians-log.clojureverse.org/specter/2020-10-27">https://clojurians-log.clojureverse.org/specter/2020-10-27</a></i><i>
 messages: 7310</i>
 pro tips:
@@ -150,7 +150,7 @@ function keyUp (e) {
 
 
 function showDateTimes (el, datestr, hourstr) {
-    dateFilterInput.innerText = "clear: " + datestr;
+    dateFilterInput.innerText = "clear: " + datestr + " " + hourstr;
     dateFilterInput.hidden = false;
     let ids = [];
     const clicked = el.parentElement;  // el = z#id/t
