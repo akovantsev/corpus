@@ -97,7 +97,7 @@ y:hover {
 }
 
 
-</style></head><body><style id="css-username">w {min-width: 128px;} r {min-width: 160px;}</style><style id="css-text-filter"></style><style id="css-date-filter"></style><style id="css-filter-override"></style><p id="filters-container"><input id="text-filter" onkeyup="debtextfilter(this.value)" placeholder="filter text" type="string" /><button hidden="hidden" id="date-filter" onclick="cleardatefilter()"></button></p><h2>#core-logic</h2><pre><i>generated UTC: 2020-11-22 14:55</i><i>
+</style></head><body><style id="css-username">w {min-width: 128px;} r {min-width: 160px;}</style><style id="css-text-filter"></style><style id="css-date-filter"></style><style id="css-filter-override"></style><p id="filters-container"><input id="text-filter" onkeyup="debtextfilter(this.value)" placeholder="filter text" type="string" /><button hidden="hidden" id="date-filter" onclick="cleardatefilter()"></button></p><h2>#core-logic</h2><pre><i>generated UTC: 2020-11-22 15:07</i><i>
 latest data: <a href="https://clojurians-log.clojureverse.org/core-logic/2020-11-06">https://clojurians-log.clojureverse.org/core-logic/2020-11-06</a></i><i>
 messages: 1080</i>
 pro tips:
@@ -149,7 +149,7 @@ function keyUp (e) {
 }
 
 
-function showDateTimes (el, datestr) {
+function showDateTimes (el, datestr, hourstr) {
     dateFilterInput.innerText = "clear: " + datestr;
     dateFilterInput.hidden = false;
     let ids = [];
@@ -159,13 +159,14 @@ function showDateTimes (el, datestr) {
     let cursor = clicked;
     function nextCursor (cursor) {
         const id = (cursor && cursor.id);
-        const t = (cursor && cursor.getAttribute("t"))
+        const d = (cursor && cursor.children[1]);
+        const h = (cursor && cursor.children[2])
         if (id) {
             ids.push(id); //includes 1st next-id not matching date.
         } else {
             cursor = null;
         }
-        if (t && t.startsWith(datestr)) {
+        if (d && (d.textContent === datestr) && (!hourstr || (h && h.textContent.startsWith(hourstr)))) {
         } else {
             cursor = null;
         }
@@ -212,7 +213,7 @@ function filterDay (el) {
 }
 
 function filterHours (el) {
-    showDateTimes(el,el.previousElementSibling.textContent + " " + el.textContent.substring(0, 2));
+    showDateTimes(el, el.previousElementSibling.textContent, el.textContent.substring(0, 2));
     el.scrollIntoView({behavior: "smooth", block: "center", inline: "center"});
 }
 
@@ -257,11 +258,9 @@ function onclick(e) {
         forceShowSelected(e.target);
     } else if (e.target.tagName === "D") {
         e.preventDefault();
-        console.log(e.target);
         filterDay(e.target);
     } else if (e.target.tagName === "H") {
         e.preventDefault();
-        console.log(e.target);
         filterHours(e.target);
     }
 }
