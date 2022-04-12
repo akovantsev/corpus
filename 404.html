@@ -1,25 +1,134 @@
 <!DOCTYPE html>
+<html lang="en">
 <head>
-    <title>404</title>
+<title>404</title>
+<meta charset="UTF-8">
+    <style type="text/css">
+        body {margin: 0;}
+        #field {position: absolute; top: 0; overflow: hidden;  box-sizing: border-box;}
+    </style>
 </head>
+
 <body>
-<h3>Clojurians slack logs:</h3>
-<ul>
-    <li><a href="/corpus/clojure-slack/adventofcode">#adventofcode</a></li>
-    <li><a href="/corpus/clojure-slack/clara">#clara</a></li>
-    <li><a href="/corpus/clojure-slack/clojure-spec">#clojure-spec</a></li>
-    <li><a href="/corpus/clojure-slack/core-logic">#core-logic</a></li>
-    <li><a href="/corpus/clojure-slack/datomic">#datomic</a></li>
-    <li><a href="/corpus/clojure-slack/shadow-cljs">#shadow-cljs</a></li>
-    <li><a href="/corpus/clojure-slack/specter">#specter</a></li>
-    <li><a href="/corpus/clojure-slack/test-check">#test-check</a></li>
-    <li><a href="/corpus/clojure-slack/tools-deps">#tools-deps</a></li>
-</ul>
-<h3>Misc:</h3>
-<ul>
-    <li><a href="/corpus/sicp">Structure and Interpretation of Computer Programs (SICP)</a>
-    <li><a href="/corpus/hickey">Rich Hickey</a>
-    <li><a href="/corpus/peterson">Jordan B. Peterson</a>
-    <li><a href="/corpus/state-battle">"why not events" follow up discussion</a>
-</ul>
+
+<canvas id="field"></canvas>
+<div id="index">
+    <h3>Clojurians slack logs:</h3>
+    <ul>
+        <li><a href="/corpus/clojure-slack/adventofcode">#adventofcode</a></li>
+        <li><a href="/corpus/clojure-slack/clara">#clara</a></li>
+        <li><a href="/corpus/clojure-slack/clojure-spec">#clojure-spec</a></li>
+        <li><a href="/corpus/clojure-slack/core-logic">#core-logic</a></li>
+        <li><a href="/corpus/clojure-slack/datomic">#datomic</a></li>
+        <li><a href="/corpus/clojure-slack/shadow-cljs">#shadow-cljs</a></li>
+        <li><a href="/corpus/clojure-slack/specter">#specter</a></li>
+        <li><a href="/corpus/clojure-slack/test-check">#test-check</a></li>
+        <li><a href="/corpus/clojure-slack/tools-deps">#tools-deps</a></li>
+    </ul>
+    <h3>Misc:</h3>
+    <ul>
+        <li><a href="/corpus/sicp">Structure and Interpretation of Computer Programs (SICP)</a>
+        <li><a href="/corpus/hickey">Rich Hickey</a>
+        <li><a href="/corpus/peterson">Jordan B. Peterson</a>
+        <li><a href="/corpus/state-battle">"why not events" follow up discussion</a>
+    </ul>
+</div>
+
+<script type="application/javascript">
+  const W = window.innerWidth;
+  const H = window.innerHeight;
+  const S = W*H;
+  const X = Math.floor(S/10);
+  const T = 100;
+  const W1 = W;
+  const W2 = W*2;
+  const canvas = document.getElementById("field")
+  canvas.setAttribute("width", W);
+  canvas.setAttribute("height", H);
+  const ctx = canvas.getContext('2d');
+  let IDS = [];
+
+  let zeroes  = function () { return new Array(S).fill(0); }
+  let idx = function (h, w) { return h*W + w; }
+
+  let next = function (NOW, NEXT, IDX, TEST, IMG) {
+      const sum = (NOW[IDX-1-W]+NOW[IDX-W]+NOW[IDX+1-W]
+                  +NOW[IDX-1  ]           +NOW[IDX+1  ]
+                  +NOW[IDX-1+W]+NOW[IDX+W]+NOW[IDX+1+W]);
+
+      if (NOW[IDX]) {
+          if (sum === 2 || sum === 3) {
+              NEXT[IDX] = 1;
+              IMG.data[IDX*4 + 0] = 255;  // R value
+              // IMG.data[IDX*4 + 1] = 0;  // G value
+              // IMG.data[IDX*4 + 2] = 0;  // B value
+              IMG.data[IDX*4 + 3] = 255;  // A value
+          } else {
+              TEST.add(IDX-2-W2);TEST.add(IDX-1-W2);TEST.add(IDX-W2);TEST.add(IDX+1-W2);TEST.add(IDX+2-W2);
+              TEST.add(IDX-2-W1);TEST.add(IDX-1-W1);TEST.add(IDX-W1);TEST.add(IDX+1-W1);TEST.add(IDX+2-W1);
+              TEST.add(IDX-2   );TEST.add(IDX-1   );TEST.add(IDX   );TEST.add(IDX+1   );TEST.add(IDX+2   );
+              TEST.add(IDX-2+W1);TEST.add(IDX-1+W1);TEST.add(IDX+W1);TEST.add(IDX+1+W1);TEST.add(IDX+2+W1);
+              TEST.add(IDX-2+W2);TEST.add(IDX-1+W2);TEST.add(IDX+W2);TEST.add(IDX+1+W2);TEST.add(IDX+2+W2);
+              // NEXT[IDX] = 0;
+          }
+      } else {
+          if (sum === 3) {
+              NEXT[IDX] = 1;
+              IMG.data[IDX*4 + 0] = 255;  // R value
+              // IMG.data[IDX*4 + 1] = 0;    // G value
+              // IMG.data[IDX*4 + 2] = 0;  // B value
+              IMG.data[IDX*4 + 3] = 255;  // A value
+              TEST.add(IDX-2-W2);TEST.add(IDX-1-W2);TEST.add(IDX-W2);TEST.add(IDX+1-W2);TEST.add(IDX+2-W2);
+              TEST.add(IDX-2-W1);TEST.add(IDX-1-W1);TEST.add(IDX-W1);TEST.add(IDX+1-W1);TEST.add(IDX+2-W1);
+              TEST.add(IDX-2   );TEST.add(IDX-1   );TEST.add(IDX   );TEST.add(IDX+1   );TEST.add(IDX+2   );
+              TEST.add(IDX-2+W1);TEST.add(IDX-1+W1);TEST.add(IDX+W1);TEST.add(IDX+1+W1);TEST.add(IDX+2+W1);
+              TEST.add(IDX-2+W2);TEST.add(IDX-1+W2);TEST.add(IDX+W2);TEST.add(IDX+1+W2);TEST.add(IDX+2+W2);
+          } else {
+              // NEXT[IDX] = 0;
+          }
+      }
+  }
+
+
+  const NOW = zeroes();
+
+  for (let x=0;x<X;x++) {
+      let IDX = Math.floor(Math.random() * S);
+      NOW[IDX] = 1;
+  }
+
+  // console.log (NOW);
+
+  let step = function (NOW, TEST) {
+      const NEXT = zeroes();
+      const NEXTTEST = new Set();
+
+      const IMG = ctx.createImageData(W, H);
+
+      // console.time("c");
+      if (!TEST) {
+          for (let h = 2; h < H - 2; h++) {
+              for (let w = 2; w < W - 2; w++) {
+                  next(NOW, NEXT, idx(h, w), NEXTTEST, IMG);
+              }
+          }
+      } else {
+          for (let i of TEST.values()) {
+            next(NOW, NEXT, i, NEXTTEST, IMG);
+          }
+      }
+
+      ctx.putImageData(IMG, 0, 0);
+      // console.timeEnd("c");
+
+      //todo: https://developer.mozilla.org/en-US/docs/Web/API/ImageData
+
+      // step(NEXT, Array.from(NEXTTEST));
+      setTimeout(function (){step(NEXT, NEXTTEST)}, T);
+      // window.requestIdleCallback(function (){step(NEXT, NEXTTEST)});
+  }
+
+  step(NOW, undefined);
+</script>
 </body>
+</html>
