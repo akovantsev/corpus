@@ -97,7 +97,7 @@ y:hover {
 }
 
 
-</style></head><body><style id="css-username">w {min-width: 160px;} r {min-width: 192px;}</style><style id="css-text-filter"></style><style id="css-date-filter"></style><style id="css-filter-override"></style><p id="filters-container"><input id="text-filter" onkeyup="debtextfilter(this.value)" placeholder="filter text" type="string" /><button hidden="hidden" id="date-filter" onclick="cleardatefilter()"></button></p><h2>#specter</h2><pre><i>generated UTC: 2022-12-24 21:35</i><i>
+</style></head><body><style id="css-username">w {min-width: 160px;} r {min-width: 192px;}</style><style id="css-text-filter"></style><style id="css-date-filter"></style><style id="css-filter-override"></style><p id="filters-container"><input id="text-filter" onkeyup="debtextfilter(this.value)" placeholder="filter text" type="string" /><button hidden="hidden" id="date-filter" onclick="cleardatefilter()"></button></p><h2>#specter</h2><pre><i>generated UTC: 2022-12-24 22:15</i><i>
 latest data: <a href="https://clojurians-log.clojureverse.org/specter/2022-11-27">https://clojurians-log.clojureverse.org/specter/2022-11-27</a></i><i>
 messages: 7695</i>
 pro tips:
@@ -131,7 +131,7 @@ function textFilter(text) {
             var sid = s.getAttribute("id");
             text.split(' ').forEach(function (t) {
                 if (t !== '') {
-                    filterTextStyle.innerHTML += "\nw#" + sid + " > z:not([t*='" + t + "' i]) {display: none; opacity: 0.6}";
+                    filterTextStyle.innerHTML += "\ng#" + sid + " > z:not([t*='" + t + "' i]) {display: none; opacity: 0.6}";
                 }
             });
         })
