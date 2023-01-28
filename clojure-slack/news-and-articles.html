@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<head><title>news-and-articles</title><meta charset="UTF-8" /><style type="text/css">body {
+    font-family: Monaco, Menlo, Consolas, "Courier New", sans-serif;
+    font-size: 12px;
+    margin: 15px;
+}
+h2 {text-align: center}
+pre,
+code {
+    font-family: Monaco, Menlo, Consolas, "Courier New", monospace;
+    color: #333;
+    line-break: anywhere;
+}
+a {
+    line-break: anywhere;
+}
+code {
+    /*line-height: 1.2;*/
+    white-space: normal;
+    color: #c25;
+    background-color: #f7f7f9;
+    border: 1px solid #e1e1e8;
+}
+pre {
+    margin: .5rem 0 .2rem;
+    font-size: .75rem;
+    /*line-height: 1.15rem;*/
+    background: #fbfaf8;
+    padding: .5rem;
+    word-break: normal;
+    display: block;
+    border: 1px solid rgba(0, 0, 0, .15);
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    border-radius: 4px;
+}
+/*span {*/
+z {
+    white-space: pre-wrap;
+}
+
+d {padding-right: 8px;}
+h {padding-right: 16px;}
+
+w, r {
+    margin-right: 10px;
+    padding-right: 8px;
+    text-align: right;
+}
+
+d,h,w,r {
+    background-color: lavender;
+    margin-top: 1px;
+    display: inline-table; /* prevents doubleclick selection spillover into neighbour elements */
+}
+
+h:hover,
+d:hover {
+    text-decoration: underline;
+    color: blue;
+    cursor: row-resize;
+}
+d {padding-right: 8px;}
+h {padding-right: 16px;}
+
+z {display: block;}
+
+z:target > r,
+z:target > w,
+z:target > d,
+z:target > h {
+    background-color: aquamarine
+}
+
+#filters-container {
+    position: fixed;
+    left: 50px;
+    z-index: 1;
+}
+#filters-container > input {
+    /*column:*/
+    display: block;
+    outline-color: aquamarine;
+}
+
+y {
+    cursor: pointer;
+    text-decoration: none;
+    color: blue;
+    position: absolute;
+    left: 3px;
+}
+
+y:hover {
+    text-decoration: underline;
+    color: aquamarine;
+}
+
+
+</style></head><body><style id="css-username">w {min-width: 240px;} r {min-width: 272px;}</style><style id="css-text-filter"></style><style id="css-date-filter"></style><style id="css-filter-override"></style><p id="filters-container"><input id="text-filter" onkeyup="debtextfilter(this.value)" placeholder="filter text" type="string" /><button hidden="hidden" id="date-filter" onclick="cleardatefilter()"></button></p><h2>#news-and-articles</h2><pre><i>generated UTC: 2023-01-25 15:11</i><i>
+latest data: <a href="https://clojurians-log.clojureverse.org/news-and-articles/2021-08-28">https://clojurians-log.clojureverse.org/news-and-articles/2021-08-28</a></i><i>
+messages: 36</i>
+pro tips:
+* Double click on text to filter by it. (doubleclick + cmd-f for extra points).
+* Click on date to keep day visible regardless of filter.
+* Click on time to keep hour visible regardless of filter.</pre><script>const textFilterInput = document.getElementById("text-filter");
+const dateFilterInput = document.getElementById("date-filter");
+const filterTextStyle = document.getElementById("css-text-filter");
+const filterDateStyle = document.getElementById("css-date-filter");
+const filterStyleOverride = document.getElementById("css-filter-override");
+
+
+
+function textFilter2(text) {
+    var style = '';
+    if (text.trim() !== '') {
+        text.split(' ').forEach(function (t) {
+            if (t !== '') {
+                style = style + "z:not([t*='" + t + "' i]) {display: none; opacity: 0.6}";
+            }
+        });
+    }
+    filterTextStyle.innerHTML = style;
+}
+function textFilter(text) {
+    filterTextStyle.innerHTML = "";
+    if (text.trim() !== '') {
+        var sections = document.getElementsByTagName("g");
+        var sectionsArr = Array.prototype.slice.call(sections);
+        sectionsArr.forEach(function (s){
+            var sid = s.getAttribute("id");
+            text.split(' ').forEach(function (t) {
+                if (t !== '') {
+                    filterTextStyle.innerHTML += "\ng#" + sid + " > z:not([t*='" + t + "' i]) {display: none; opacity: 0.6}";
+                }
+            });
+        })
+    }
+}
+function textFilter3(text) {
+    console.time("text search");
+    filterTextStyle.innerHTML = "";
+    if (text.trim() !== '') {
+        const re = new RegExp( text, "i");
+        var sections = document.getElementsByTagName("g");
+        var sectionsArr = Array.prototype.slice.call(sections);
+        sectionsArr.forEach(function (w){
+            var zs = w.getElementsByTagName ("z");
+            var zsArr = Array.prototype.slice.call(zs);
+            var ids = zsArr
+                .filter(function (el) {
+                    return !re.test(el.innerText);
+                })
+                .map(function (el){
+                    return el.getAttribute("id");
+                });
+            if (ids) {
+                filterTextStyle.innerHTML += "\n#" + ids.join(",#") + " {display: none; opacity: 0.6}";
+            }
+        })
+    }
+    console.timeEnd("text search");
+}
+
+
+function filterSelection (e) {
+    let sel = document.getSelection();
+    let txt = sel.toString();
+    textFilterInput.value = (txt || "");
+    textFilter(txt);
+}
+function debounce1(callback, delay) {
+    let timeout;
+    return function(arg) {
+        clearTimeout(timeout);
+        timeout = setTimeout(callback, delay, arg);
+    }
+}
+
+function keyUp (e) {
+    if (e.code === "KeyF" && e.ctrlKey) {
+        let txt = document.getSelection().toString();
+        if (txt.length > 0) {
+            textFilterInput.value = (txt || "");
+            textFilter(txt);
+        }
+    }
+}
+
+
+function showDateTimes (el, datestr, hourstr) {
+    dateFilterInput.innerText = "clear: " + datestr + " " + hourstr;
+    dateFilterInput.hidden = false;
+    let ids = [];
+    const clicked = el.parentElement;  // el = z#id/t
+    ids.push(clicked.id);
+    // var idbefore, idafter;
+    let cursor = clicked;
+    function nextCursor (cursor) {
+        const id = (cursor && cursor.id);
+        const d = (cursor && cursor.children[1]);
+        const h = (cursor && cursor.children[2])
+        if (id) {
+            ids.push(id); //includes 1st next-id not matching date.
+        } else {
+            cursor = null;
+        }
+        if (d && (d.textContent === datestr) && (!hourstr || (h && h.textContent.startsWith(hourstr)))) {
+        } else {
+            cursor = null;
+        }
+        return cursor;
+    }
+    while (cursor) {
+        cursor = nextCursor(cursor.previousElementSibling);
+    }
+
+    cursor = clicked;
+
+    while (cursor) {
+        cursor = nextCursor(cursor.nextElementSibling);
+    }
+
+
+    var style1 = '';
+    var style2 = '';
+    var content;
+    if (datestr.includes(" ")) { //hour
+        content = " *";
+    } else {
+        content = "**";
+    }
+    ids.forEach(function (id) {
+        if (id) {
+            style1 = style1 + ", #" + id;
+            style2 = style2 + ", #" + id + " h:after";
+        }
+    })
+    if (style1) {
+        style1 = style1.substring(1) + " {display: block !important}";
+    }
+    if (style2) {
+        style2 = style2.substring(1) + " {content: \"" + content + "\"; position: absolute}"
+    }
+    filterDateStyle.innerHTML = style1 + "\n" + style2;
+}
+
+// https://developer.mozilla.org/en-US/docs/Web/API/Element/scrollIntoView
+function filterDay (el) {
+    showDateTimes(el, el.textContent);
+    el.scrollIntoView({behavior: "smooth", block: "center", inline: "center"});
+}
+
+function filterHours (el) {
+    showDateTimes(el, el.previousElementSibling.textContent, el.textContent.substring(0, 2));
+    el.scrollIntoView({behavior: "smooth", block: "center", inline: "center"});
+}
+
+function forceShowSelected (el) {
+    var id = el.parentElement.id
+    if (id) {
+        window.location.hash = "#" + id;
+        filterStyleOverride.innerHTML = ""
+            + "#" + id
+            + " {display: block !important;}"
+            + "#" + id + " h:after"
+            + " {content: \"  #\"; position: absolute}";
+
+    } else {
+        window.location.hash = "";
+        filterStyleOverride.innerHTML = "";
+    }
+}
+
+
+function cleardatefilter () {
+    dateFilterInput.hidden = true;
+    dateFilterInput.innerText = "";
+    filterDateStyle.innerHTML = "";
+}
+
+const debtextfilter = debounce1(textFilter, 200);
+
+function doubleClick (e) {
+    if (e.target.tagName !== "INPUT"
+        && e.target.tagName !== "D"
+        && e.target.tagName !== "H") {
+
+        filterSelection();
+        e.target.scrollIntoView({behavior: "auto", block: "center", inline: "start"});
+    }
+}
+
+function onclick(e) {
+    if (e.target.tagName === "Y") {
+        e.preventDefault();
+        forceShowSelected(e.target);
+    } else if (e.target.tagName === "D") {
+        e.preventDefault();
+        filterDay(e.target);
+    } else if (e.target.tagName === "H") {
+        e.preventDefault();
+        filterHours(e.target);
+    }
+}
+
+document.onclick = onclick;
+document.ondblclick = doubleClick;
+document.onkeyup = keyUp;
+textFilterInput.focus();
+</script><div><g id="s0"><z id="t1591449363" t="Daniel Tan https://medium.com/glassblade/types-vs-schema-data-as-first-class-citizens-cfd34c4127c8"><y>#</y><d>2020-06-06</d><h>13:16</h><w>Daniel Tan</w><a href="https://medium.com/glassblade/types-vs-schema-data-as-first-class-citizens-cfd34c4127c8" target="_blank">https://medium.com/glassblade/types-vs-schema-data-as-first-class-citizens-cfd34c4127c8</a></z><z id="t1591453495" t="Ben Sless https://bsless.github.io/code-smells/"><y>#</y><d>2020-06-06</d><h>14:24</h><w>Ben Sless</w><a href="https://bsless.github.io/code-smells/" target="_blank">https://bsless.github.io/code-smells/</a></z><z id="t1591545767" t="Olical Wrote up an article on &quot;conversational software development&quot; https://oli.me.uk/conversational-software-development/ Trying to introduce people who have only experienced restarting their server to see changes to the power of live evaluation. 🎉"><y>#</y><d>2020-06-07</d><h>16:02</h><w>Olical</w>Wrote up an article on &quot;conversational software development&quot; <a href="https://oli.me.uk/conversational-software-development/" target="_blank">https://oli.me.uk/conversational-software-development/</a>
+
+Trying to introduce people who have only experienced restarting their server to see changes to the power of live evaluation. <b>🎉</b></z><z id="t1591637003" t="Renato Alencar Hi everyone, I wrote a little introductory article about Stuart Sierra&apos;s Component library. This could sound a little bit off topic, because this is in Portuguese, but I noticed that there aren&apos;t a lot of articles about Clojure written in Portuguese and mainly about specific topics. So I&apos;m leaving it here for anyone who could be interested. https://medium.com/@renatoalencar/introdu%C3%A7%C3%A3o-ao-clojure-component-6ffbf388f6ae"><y>#</y><d>2020-06-08</d><h>17:23</h><w>Renato Alencar</w>Hi everyone, I wrote a little introductory article about Stuart Sierra&apos;s Component library. This could sound a little bit off topic, because this is in Portuguese, but I noticed that there aren&apos;t a lot of articles about Clojure written in Portuguese and mainly about specific topics. So I&apos;m leaving it here for anyone who could be interested.
+
+<a href="https://medium.com/@renatoalencar/introdu%C3%A7%C3%A3o-ao-clojure-component-6ffbf388f6ae" target="_blank">https://medium.com/@renatoalencar/introdu%C3%A7%C3%A3o-ao-clojure-component-6ffbf388f6ae</a></z><z id="t1591770030" t="jacekschae This week on podcast [:attrs {:href &quot;/_/_/users/U4YGF4NGM&quot;}] talking about Helix https://clojurescriptpodcast.com Thanks for listening!"><y>#</y><d>2020-06-10</d><h>06:20</h><w>jacekschae</w>This week on podcast <a>@lilactown</a> talking about Helix <a href="https://clojurescriptpodcast.com" target="_blank">https://clojurescriptpodcast.com</a> Thanks for listening!</z><z id="t1591957168" t="plexus https://lambdaisland.com/blog/2020-06-12-logging-in-clojure-making-sense-of-the-mess"><y>#</y><d>2020-06-12</d><h>10:19</h><w>plexus</w><a href="https://lambdaisland.com/blog/2020-06-12-logging-in-clojure-making-sense-of-the-mess" target="_blank">https://lambdaisland.com/blog/2020-06-12-logging-in-clojure-making-sense-of-the-mess</a></z><z id="t1592074875" t="Ben Sless Wondering if Clojure should have a &quot;yet another transducers post&quot; like Haskell has &quot;yet another monads post&quot; My take on transducers, part 1 https://bsless.github.io/transducers-intro/"><y>#</y><d>2020-06-13</d><h>19:01</h><w>Ben Sless</w>Wondering if Clojure should have a &quot;yet another transducers post&quot; like Haskell has &quot;yet another monads post&quot;
+My take on transducers, part 1
+<a href="https://bsless.github.io/transducers-intro/" target="_blank">https://bsless.github.io/transducers-intro/</a></z><z id="t1596974786" t="Busy escaping the comfort zone Hi fellow Clojurians, Re-ops is a cohesive set of components that takes a different approach for managing the life cycle of machines, from creating VM&apos;s and containers to monitoring and provisioning them, all is done via a Reloadble REPL with the same state of mind that we have learned to love in our Clojure projects. A new https://re-ops.github.io/re-docs/quickstart/#installation section has been added to the guide if you are interested to get a feel of what Re-ops is all about."><y>#</y><d>2020-08-09</d><h>12:06</h><w>Busy escaping the comfort zone</w>Hi fellow Clojurians, Re-ops is a cohesive set of components that takes a different approach for managing the life cycle of machines, from creating VM&apos;s and containers to monitoring and provisioning them, all is done via a Reloadble REPL with the same state of mind that we have learned to love in our Clojure projects.
+
+A new <a href="https://re-ops.github.io/re-docs/quickstart/#installation" target="_blank">https://re-ops.github.io/re-docs/quickstart/#installation</a> section has been added to the guide if you are interested to get a feel of what Re-ops is all about.</z><z id="t1628670590" t="jarohen Here&apos;s what&apos;s been happening in #crux land in H1 2021, and a hint at things to come: https://twitter.com/juxtpro/status/1425207115212365827?s=19 crux"><y>#</y><d>2021-08-11</d><h>08:29</h><w>jarohen</w>Here&apos;s what&apos;s been happening in #crux land in H1 2021, and a hint at things to come: <a href="https://twitter.com/juxtpro/status/1425207115212365827?s=19" target="_blank">https://twitter.com/juxtpro/status/1425207115212365827?s=19</a> <b>crux</b></z><z id="t1628700050" t="lambduhhh A must see for #Clojure devs interested in learning about reagent, reactive atoms in cljs apps and how we render proper views out of yucky mutable state. [Reactive cljs] Atoms make up EVERYTHING https://youtu.be/85xtUwRQRy8"><y>#</y><d>2021-08-11</d><h>16:40</h><w>lambduhhh</w>A must see for #Clojure devs interested in learning about reagent, reactive atoms in cljs apps and how we render proper views out of yucky mutable state.
+
+[Reactive cljs] Atoms make up EVERYTHING <a href="https://youtu.be/85xtUwRQRy8" target="_blank">https://youtu.be/85xtUwRQRy8</a></z><z id="t1628806695" t="vncz My Clojure article is now on the first page of Google: https://auth0.com/blog/why-developers-should-look-into-clojure/ It’s listed even before the official repository troll"><y>#</y><d>2021-08-12</d><h>22:18</h><w>vncz</w>My Clojure article is now on the first page of Google: <a href="https://auth0.com/blog/why-developers-should-look-into-clojure/" target="_blank">https://auth0.com/blog/why-developers-should-look-into-clojure/</a>
+
+It’s listed even before the official repository <b>troll</b></z><z id="t1629036138" t="vncz [:attrs {:href &quot;/_/_/users/U05254DQM&quot;}] Interesting. Is there any chance you have the source code or willing to share that specific part?"><y>#</y><d>2021-08-15</d><h>14:02</h><r>vncz</r><a>@jr0cket</a> Interesting. Is there any chance you have the source code or willing to share that specific part?</z><z id="t1629036138" t="vncz [:attrs {:href &quot;/_/_/users/U05254DQM&quot;}] Interesting. Is there any chance you have the source code or willing to share that specific part?"><y>#</y><d>2021-08-15</d><h>14:02</h><w>vncz</w><a>@jr0cket</a> Interesting. Is there any chance you have the source code or willing to share that specific part?</z><z id="t1628844573" t="borkdude Watch “Apropos 2021-07-24” on Vimeo: https://vimeo.com/585335551 where [:attrs {:href &quot;/_/_/users/U7RJTCH6J&quot;}] and I show a novel approach to developing native(!) mobile apps with JVM(!) #clojure, #sci, #graalvm and Skia. Code: https://github.com/phronmophobic/mobiletest"><y>#</y><d>2021-08-13</d><h>08:49</h><w>borkdude</w>Watch “Apropos 2021-07-24” on Vimeo: <a href="https://vimeo.com/585335551" target="_blank">https://vimeo.com/585335551</a>
+
+where <a>@smith.adriane</a> and I show a novel approach to developing native(!) mobile apps with JVM(!) #clojure, #sci, #graalvm and Skia.
+
+Code: <a href="https://github.com/phronmophobic/mobiletest" target="_blank">https://github.com/phronmophobic/mobiletest</a></z><z id="t1628879846" t="Alex Miller (Clojure team) https://twitter.com/ClojureDeref/status/1426251491388579842"><y>#</y><d>2021-08-13</d><h>18:37</h><w>Alex Miller (Clojure team)</w><a href="https://twitter.com/ClojureDeref/status/1426251491388579842" target="_blank">https://twitter.com/ClojureDeref/status/1426251491388579842</a></z><z id="t1628882624" t="Alex Miller (Clojure team) https://clojure.org/news/2021/08/13/deref (better non-chopped link)"><y>#</y><d>2021-08-13</d><h>19:23</h><w>Alex Miller (Clojure team)</w><a href="https://clojure.org/news/2021/08/13/deref" target="_blank">https://clojure.org/news/2021/08/13/deref</a> (better non-chopped link)</z><z id="t1629131818" t="deleted A new edition of Clojure Morsels has shipped! Front and center are mobile app development and also one of my favorite subjects: how to help newcomers and improve community. You can read it in your inbox, of course, but just in case you somehow aren&apos;t subscribed (shock! horror! dismay!) here&apos;s a link to read it: https://mailchi.mp/clojuremorsels/2021-08-16-edition ( 💜 )"><y>#</y><d>2021-08-16</d><h>16:36</h><w>deleted</w>A new edition of Clojure Morsels has shipped! Front and center are mobile app development and also one of my favorite subjects: how to help newcomers and improve community. You can read it in your inbox, of course, but just in case you somehow aren&apos;t subscribed (shock! horror! dismay!) here&apos;s a link to read it: <a href="https://mailchi.mp/clojuremorsels/2021-08-16-edition" target="_blank">https://mailchi.mp/clojuremorsels/2021-08-16-edition</a> (<b>💜</b>)</z><z id="t1629191842" t="pez Not sure where to post this, but I must post it! My employer (Agical) is sponsoring me to work with open source Clojure stuff this week. I feel how I am utterly happy this week, doing what I love the most doing: Trying to make it easier to get started with Clojure. Hopefully more than my happiness will come out of this, and I know of at least one happy user. I expressed this joy at LinkedIn as well. Please re-share. And please connect! https://www.linkedin.com/feed/update/urn:li:activity:6833320746320699393/"><y>#</y><d>2021-08-17</d><h>09:17</h><w>pez</w>Not sure where to post this, but I must post it! My employer (Agical) is sponsoring me to work with open source Clojure stuff this week. I feel how I am utterly happy this week, doing what I love the most doing: Trying to make it easier to get started with Clojure. Hopefully more than my happiness will come out of this, and I know of at least one happy user. I expressed this joy at LinkedIn as well. Please re-share. And please connect!  <a href="https://www.linkedin.com/feed/update/urn:li:activity:6833320746320699393/" target="_blank">https://www.linkedin.com/feed/update/urn:li:activity:6833320746320699393/</a></z><z id="t1629205347" t="henryw374 my new post: Clojurescript date/time libraries compared:, Deja-fu (goog.date based) vs cljc.java-time : https://widdindustries.com/clojurescript-datetime-lib-comparison/"><y>#</y><d>2021-08-17</d><h>13:02</h><w>henryw374</w>my new post: Clojurescript date/time libraries compared:, <code>Deja-fu</code> (goog.date based) vs <code>cljc.java-time</code> : <a href="https://widdindustries.com/clojurescript-datetime-lib-comparison/" target="_blank">https://widdindustries.com/clojurescript-datetime-lib-comparison/</a></z><z id="t1629215508" t="blueberry [New release - RC4] Deep Learning for Programmers: An Interactive Tutorial with CUDA, OpenCL, DNNL, Java, and Clojure https://aiprobook.com/deep-learning-for-programmers/"><y>#</y><d>2021-08-17</d><h>15:51</h><w>blueberry</w>[New release - RC4] Deep Learning for Programmers: An Interactive Tutorial with CUDA, OpenCL, DNNL, Java, and Clojure <a href="https://aiprobook.com/deep-learning-for-programmers/" target="_blank">https://aiprobook.com/deep-learning-for-programmers/</a></z><z id="t1629302808" t="Alys Brooks 📣 New blog post! I split some hairs about what we mean when we say &quot;Clojure&quot;—hopefully in an informative way! https://lambdaisland.com/blog/2021-08-18-a-tale-of-three-clojures"><y>#</y><d>2021-08-18</d><h>16:06</h><w>Alys Brooks</w><b>📣</b>New blog post! I split some hairs about what we mean when we say &quot;Clojure&quot;—hopefully in an informative way!
+<a href="https://lambdaisland.com/blog/2021-08-18-a-tale-of-three-clojures" target="_blank">https://lambdaisland.com/blog/2021-08-18-a-tale-of-three-clojures</a></z><z id="t1629306869" t="tengstrand I think this will be an exciting event, with [:attrs {:href &quot;/_/_/users/URJPT3LJ1&quot;}] , a Clojure enthusiast and the guy behind CodeScene (written in Clojure): https://www.meetup.com/Func-Prog-Sweden/events/278430642/"><y>#</y><d>2021-08-18</d><h>17:14</h><w>tengstrand</w>I think this will be an exciting event, with <a>@adam.tornhill</a> , a Clojure enthusiast and the guy behind CodeScene (written in Clojure): <a href="https://www.meetup.com/Func-Prog-Sweden/events/278430642/" target="_blank">https://www.meetup.com/Func-Prog-Sweden/events/278430642/</a></z><z id="t1629450256" t="Inna Here&apos;s the story of a JS developer from our team who started learning Clojure. He decided to share his experience which can be useful for beginners. Additionally, we hope this article helps someone remember how they got their start in Clojure and share it in the comments: https://freshcodeit.com/freshcode-post/how-javascript-developer-first-met-clojure"><y>#</y><d>2021-08-20</d><h>09:04</h><w>Inna</w>Here&apos;s the story of a JS developer from our team who started learning Clojure. He decided to share his experience which can be useful for beginners. Additionally, we hope this article helps someone remember how they got their start in Clojure and share it in the comments:
+<a href="https://freshcodeit.com/freshcode-post/how-javascript-developer-first-met-clojure" target="_blank">https://freshcodeit.com/freshcode-post/how-javascript-developer-first-met-clojure</a></z><z id="t1629464096" t="ericdallo"><y>#</y><d>2021-08-20</d><h>12:54</h><w>ericdallo</w></z><z id="t1629470210" t="refset 5 years since our last review, [:attrs {:href &quot;/_/_/users/U06P1CPLJ&quot;}] has led a new iteration of JUXT&apos;s Clojure Radar https://www.juxt.pro/blog/radar-2021"><y>#</y><d>2021-08-20</d><h>14:36</h><w>refset</w>5 years since our last review, <a>@joelittlejohn</a> has led a new iteration of JUXT&apos;s Clojure Radar <a href="https://www.juxt.pro/blog/radar-2021" target="_blank">https://www.juxt.pro/blog/radar-2021</a></z><z id="t1629470478" t="martinklepsch https://twitter.com/martinklepsch/status/1428720637158338568"><y>#</y><d>2021-08-20</d><h>14:41</h><w>martinklepsch</w><a href="https://twitter.com/martinklepsch/status/1428720637158338568" target="_blank">https://twitter.com/martinklepsch/status/1428720637158338568</a></z><z id="t1629473215" t="Alex Miller (Clojure team) https://clojure.org/news/2021/08/20/deref"><y>#</y><d>2021-08-20</d><h>15:26</h><w>Alex Miller (Clojure team)</w><a href="https://clojure.org/news/2021/08/20/deref" target="_blank">https://clojure.org/news/2021/08/20/deref</a></z><z id="t1629690653" t="mefryar I started learning Clojure earlier this summer and have written a reflection on the strategies that were effective for me, in case they might be helpful to other beginners: https://mefryar.github.io/2021/08/02/clojure-deliberate-practice/ My journey was significantly influenced by lurking on this Slack since it is where I learned about REPL-Driven Development from a response [:attrs {:href &quot;/_/_/users/U04V70XH6&quot;}] gave to a request for advice about what to practice as a beginner who wants to become a more productive Clojure programmer. (Thank you, Sean!)"><y>#</y><d>2021-08-23</d><h>03:50</h><w>mefryar</w>I started learning Clojure earlier this summer and have written a reflection on the strategies that were effective for me, in case they might be helpful to other beginners: <a href="https://mefryar.github.io/2021/08/02/clojure-deliberate-practice/" target="_blank">https://mefryar.github.io/2021/08/02/clojure-deliberate-practice/</a> My journey was significantly influenced by lurking on this Slack since it is where I learned about REPL-Driven Development from a response <a>@seancorfield</a> gave to a request for advice about what to practice as a beginner who wants to become a more productive Clojure programmer. (Thank you, Sean!)</z><z id="t1629751687" t="pez Here’s a log of my “check-ins” to #clojure-europe last week. https://clojureverse.org/t/my-beginner-s-journey-week-august-16-22-2021/8087"><y>#</y><d>2021-08-23</d><h>20:48</h><w>pez</w>Here’s a log of my “check-ins” to #clojure-europe last week. <a href="https://clojureverse.org/t/my-beginner-s-journey-week-august-16-22-2021/8087" target="_blank">https://clojureverse.org/t/my-beginner-s-journey-week-august-16-22-2021/8087</a></z><z id="t1629943133" t="seancorfield Part V of my monorepo / Polylith / tools.build series: https://corfield.org/blog/2021/08/25/deps-edn-monorepo-5/ (not much about our monorepo in this &quot;episode&quot;)."><y>#</y><d>2021-08-26</d><h>01:58</h><w>seancorfield</w>Part V of my monorepo / Polylith / tools.build series: <a href="https://corfield.org/blog/2021/08/25/deps-edn-monorepo-5/" target="_blank">https://corfield.org/blog/2021/08/25/deps-edn-monorepo-5/</a> (not much about our monorepo in this &quot;episode&quot;).</z><z id="t1629956497" t="plexus I&apos;ve been doing some deep dives into classloaders and classpaths recently, and tried to capture some of my findings in a blog post. https://lambdaisland.com/blog/2021-08-25-classpath-is-a-lie"><y>#</y><d>2021-08-26</d><h>05:41</h><w>plexus</w>I&apos;ve been doing some deep dives into classloaders and classpaths recently, and tried to capture some of my findings in a blog post. <a href="https://lambdaisland.com/blog/2021-08-25-classpath-is-a-lie" target="_blank">https://lambdaisland.com/blog/2021-08-25-classpath-is-a-lie</a></z><z id="t1629993101" t="jarrodctaylor A write-up on getting started with using AWS Cognito to provide authentication for your Datomic Ions. http://www.jarrodctaylor.com/posts/Cognito-Authentication-For-Datomic-Cloud/"><y>#</y><d>2021-08-26</d><h>15:51</h><w>jarrodctaylor</w>A write-up on getting started with using AWS Cognito to provide authentication for your Datomic Ions. <a href="http://www.jarrodctaylor.com/posts/Cognito-Authentication-For-Datomic-Cloud/" target="_blank">http://www.jarrodctaylor.com/posts/Cognito-Authentication-For-Datomic-Cloud/</a></z><z id="t1630074725" t="Alex Miller (Clojure team) Clojure Deref for Aug 27, 2021 https://clojure.org/news/2021/08/27/deref"><y>#</y><d>2021-08-27</d><h>14:32</h><w>Alex Miller (Clojure team)</w>Clojure Deref for Aug 27, 2021 <a href="https://clojure.org/news/2021/08/27/deref" target="_blank">https://clojure.org/news/2021/08/27/deref</a></z><z id="t1630084269" t="slipset Some thoughts on dependency injection in a webapp https://slipset.github.io/posts/dependency-injection-perhaps and its successor, some stuff on configs https://slipset.github.io/posts/config Unclear on how many parts this will be"><y>#</y><d>2021-08-27</d><h>17:11</h><w>slipset</w>Some thoughts on dependency injection in a webapp <a href="https://slipset.github.io/posts/dependency-injection-perhaps" target="_blank">https://slipset.github.io/posts/dependency-injection-perhaps</a> and its successor, some stuff on configs <a href="https://slipset.github.io/posts/config" target="_blank">https://slipset.github.io/posts/config</a>
+Unclear on how many parts this will be</z><z id="t1630134970" t="didibus Someone asked on Reddit: When is Clojure &quot;the right tool for the job? Well I wrote a pretty thorough article that can also serve as a &quot;Why Clojure?/Why not Clojure?&quot; If you&apos;ve always been interested to know what Clojure is good at and where it&apos;s a bad choice, I recommend you have a read: https://gist.github.com/didibus/6e5ff960b25fdc1a5f8f97acede614b0"><y>#</y><d>2021-08-28</d><h>07:16</h><w>didibus</w>Someone asked on Reddit: When is Clojure &quot;the right tool for the job?
+
+Well I wrote a pretty thorough article that can also serve as a &quot;Why Clojure?/Why not Clojure?&quot;
+
+If you&apos;ve always been interested to know what Clojure is good at and where it&apos;s a bad choice, I recommend you have a read:
+
+<a href="https://gist.github.com/didibus/6e5ff960b25fdc1a5f8f97acede614b0" target="_blank">https://gist.github.com/didibus/6e5ff960b25fdc1a5f8f97acede614b0</a></z><z id="t1630174836" t="practicalli-john A quick article on automating deployment of Cryogen static webstie using Clojure and CLI tools with GitHub Actions. Examples include deploying to GitHub Pages and an AWS S3 bucket. https://practical.li/blog/posts/automate-cryogen-clojure-blog-with-github-actions/"><y>#</y><d>2021-08-28</d><h>18:20</h><w>practicalli-john</w>A quick article on automating deployment of Cryogen static webstie using Clojure and CLI tools with GitHub Actions.  Examples include deploying to GitHub Pages and an AWS S3 bucket.
+<a href="https://practical.li/blog/posts/automate-cryogen-clojure-blog-with-github-actions/" target="_blank">https://practical.li/blog/posts/automate-cryogen-clojure-blog-with-github-actions/</a></z></g></div></body>
