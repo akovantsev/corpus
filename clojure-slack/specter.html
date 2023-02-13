@@ -97,9 +97,9 @@ y:hover {
 }
 
 
-</style></head><body><style id="css-username">w {min-width: 160px;} r {min-width: 192px;}</style><style id="css-text-filter"></style><style id="css-date-filter"></style><style id="css-filter-override"></style><p id="filters-container"><input id="text-filter" onkeyup="debtextfilter(this.value)" placeholder="filter text" type="string" /><button hidden="hidden" id="date-filter" onclick="cleardatefilter()"></button></p><h2>#specter</h2><pre><i>generated UTC: 2022-12-24 22:15</i><i>
-latest data: <a href="https://clojurians-log.clojureverse.org/specter/2022-11-27">https://clojurians-log.clojureverse.org/specter/2022-11-27</a></i><i>
-messages: 7695</i>
+</style></head><body><style id="css-username">w {min-width: 160px;} r {min-width: 192px;}</style><style id="css-text-filter"></style><style id="css-date-filter"></style><style id="css-filter-override"></style><p id="filters-container"><input id="text-filter" onkeyup="debtextfilter(this.value)" placeholder="filter text" type="string" /><button hidden="hidden" id="date-filter" onclick="cleardatefilter()"></button></p><h2>#specter</h2><pre><i>generated UTC: 2023-02-13 19:05</i><i>
+latest data: <a href="https://clojurians-log.clojureverse.org/specter/2023-02-11">https://clojurians-log.clojureverse.org/specter/2023-02-11</a></i><i>
+messages: 7702</i>
 pro tips:
 * Double click on text to filter by it. (doubleclick + cmd-f for extra points).
 * Click on date to keep day visible regardless of filter.
@@ -8746,4 +8746,54 @@ Last time I asked about this your concern was that the artifact would become big
 
 It&apos;s now also possible to have this configuration in a third party library and all people have to do is to include that extra library. It&apos;s one extra step, which is less convenient, but doable.
 
-Is your preference still to keep the config out of the library? If so, we&apos;ll continue with the third party library.  cc <a>@ericdallo</a> (clojure-lsp). Thanks.</z><z id="t1669514581" t="nathanmarz [:attrs {:href &quot;/_/_/users/U04V15CAJ&quot;}] yea, would rather keep it in a 3rd party library"><y>#</y><d>2022-11-27</d><h>02:03</h><w>nathanmarz</w><a>@borkdude</a> yea, would rather keep it in a 3rd party library</z></g></div></body>
+Is your preference still to keep the config out of the library? If so, we&apos;ll continue with the third party library.  cc <a>@ericdallo</a> (clojure-lsp). Thanks.</z><z id="t1669514581" t="nathanmarz [:attrs {:href &quot;/_/_/users/U04V15CAJ&quot;}] yea, would rather keep it in a 3rd party library"><y>#</y><d>2022-11-27</d><h>02:03</h><w>nathanmarz</w><a>@borkdude</a> yea, would rather keep it in a 3rd party library</z><z id="t1675954075" t="Lidor Cohen Hi [:attrs {:href &quot;/_/_/users/U173SEFUN&quot;}] , Recently our team and I came across the need to write relational lenses (basically we want a single expression that can be used to both view and mutate data). My first experience with lense like construct was specter and it was delightful. I was hoping you could help me with a few answers: 1. Were you aware of the concept of Lenses when writing specter and was it a guide in the design process? 2. Are there any differences between specter and lenses? 3. How would you approach implementing navigators that handle relational data (joins)? Hope you&apos;d find the time to share some of your wisdom. And thank you for this awesome library that eased me in a practical manner into the abstract concept of lenses."><y>#</y><d>2023-02-09</d><h>14:47</h><w>Lidor Cohen</w>Hi <a>@nathanmarz</a>,
+
+Recently our team and I came across the need to write relational lenses (basically we want a single expression that can be used to both view and mutate data). My first experience with lense like construct was specter and it was delightful.
+I was hoping you could help me with a few answers:
+1. Were you aware of the concept of Lenses when writing specter and was it a guide in the design process?
+2. Are there any differences between specter and lenses?
+3. How would you approach implementing navigators that handle relational data (joins)?
+Hope you&apos;d find the time to share some of your wisdom.
+And thank you for this awesome library that eased me in a practical manner into the abstract concept of lenses.</z><z id="t1675994482" t="nathanmarz i became aware of lenses probably about a year after I made the first version of specter"><y>#</y><d>2023-02-10</d><h>02:01</h><w>nathanmarz</w>i became aware of lenses probably about a year after I made the first version of specter</z><z id="t1675994510" t="nathanmarz i&apos;m not an expert in all the lens libraries, but the haskell one I know makes distinctions between lenses that go to one element vs. many"><y>#</y><d>2023-02-10</d><h>02:01</h><w>nathanmarz</w>i&apos;m not an expert in all the lens libraries, but the haskell one I know makes distinctions between lenses that go to one element vs. many</z><z id="t1675994533" t="nathanmarz not sure what you mean by making a navigator that handles joins"><y>#</y><d>2023-02-10</d><h>02:02</h><w>nathanmarz</w>not sure what you mean by making a navigator that handles joins</z><z id="t1675994556" t="nathanmarz i would say that&apos;s out of scope for specter"><y>#</y><d>2023-02-10</d><h>02:02</h><w>nathanmarz</w>i would say that&apos;s out of scope for specter</z><z id="t1676078301" t="nyor.tr I&apos;m trying to transform an XML tree, like the following: (def xml {:tag :main, :attrs {}, :content [&quot;\n &quot; {:tag :parent, :attrs {}, :content [&quot;\n &quot; {:tag :child1, :attrs {}, :content [&quot;value1&quot;]} &quot;\n &quot; {:tag :child2, :attrs {}, :content [&quot;value2&quot;]} &quot;\n &quot; {:tag :child3, :attrs {}, :content [&quot;value3&quot;]} &quot;\n &quot;]} &quot;\n &quot; {:tag :parent, :attrs {}, :content [&quot;\n &quot; {:tag :child1, :attrs {}, :content [&quot;value4&quot;]} &quot;\n &quot; {:tag :child2, :attrs {}, :content [&quot;value5&quot;]} &quot;\n &quot; {:tag :child3, :attrs {}, :content [&quot;value6&quot;]} &quot;\n &quot; {:tag :child4, :attrs {}, :content []} &quot;\n &quot;]} &quot;\n &quot; {:tag :parent, :attrs {}, :content []} &quot;\n&quot;]}) into a flat data structure like: (def flat-xml [{[:main :parent :child1] &quot;value1&quot; [:main :parent :child2] &quot;value2&quot; [:main :parent :child3] &quot;value3&quot;} {[:main :parent :child1] &quot;value4&quot; [:main :parent :child2] &quot;value5&quot; [:main :parent :child3] &quot;value6&quot; [:main :parent :child4] &quot;&quot;}]) could this be done using specter?"><y>#</y><d>2023-02-11</d><h>01:18</h><w>nyor.tr</w>I&apos;m trying to transform an XML tree, like the following:
+
+<pre>(def xml {:tag :main,
+ :attrs {},
+ :content
+ [&quot;\n    &quot;
+  {:tag :parent,
+   :attrs {},
+   :content
+   [&quot;\n        &quot;
+    {:tag :child1, :attrs {}, :content [&quot;value1&quot;]}
+    &quot;\n        &quot;
+    {:tag :child2, :attrs {}, :content [&quot;value2&quot;]}
+    &quot;\n        &quot;
+    {:tag :child3, :attrs {}, :content [&quot;value3&quot;]}
+    &quot;\n    &quot;]}
+  &quot;\n    &quot;
+  {:tag :parent,
+   :attrs {},
+   :content
+   [&quot;\n        &quot;
+    {:tag :child1, :attrs {}, :content [&quot;value4&quot;]}
+    &quot;\n        &quot;
+    {:tag :child2, :attrs {}, :content [&quot;value5&quot;]}
+    &quot;\n        &quot;
+    {:tag :child3, :attrs {}, :content [&quot;value6&quot;]}
+    &quot;\n        &quot;
+    {:tag :child4, :attrs {}, :content []}
+    &quot;\n    &quot;]}
+  &quot;\n    &quot;
+  {:tag :parent, :attrs {}, :content []}
+  &quot;\n&quot;]})</pre>
+
+into a flat data structure like:
+
+<pre>(def flat-xml [{[:main :parent :child1] &quot;value1&quot;
+                [:main :parent :child2] &quot;value2&quot;
+                [:main :parent :child3] &quot;value3&quot;}
+               {[:main :parent :child1] &quot;value4&quot;
+                [:main :parent :child2] &quot;value5&quot;
+                [:main :parent :child3] &quot;value6&quot;
+                [:main :parent :child4] &quot;&quot;}])</pre>
+could this be done using specter?</z><z id="t1676142455" t="nathanmarz [:attrs {:href &quot;/_/_/users/U0U2W7B71&quot;}] yes, you would use recursive-path and collect-one"><y>#</y><d>2023-02-11</d><h>19:07</h><w>nathanmarz</w><a>@nyor.tr</a> yes, you would use <code>recursive-path</code> and <code>collect-one</code></z></g></div></body>
