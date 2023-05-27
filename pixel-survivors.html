@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>pixel survivors</title>
+    <style>
+        #contaiter {width:100vw; height:100vh; display:flex; flex-direction:column}
+        .stat {display:block; margin-left:auto; margin-right:auto;}
+        #canvas {margin:auto; border:1px solid black;}
+        .big {font-size: 300px;opacity: 0.666; position: fixed; top: 0; width: 100%; text-align: center; height: 100%;display: flex;}
+        #dead{color: red;}
+        #paused{color: mediumslateblue;}
+        #dead div {margin:auto}
+        #paused div {margin:auto}
+        .hidden div {display: none}
+    </style>
+</head>
+<body style="margin:0">
+
+<div id="contaiter">
+    <b class="stat" id="frames_so_far">count</b>
+    <b class="stat" id="enemy-spawn-rate"></b>
+    <b class="stat" id="enemies">enemies: 0</b>
+    <b class="stat" id="weap-frames">-</b>
+    <b class="stat" id="weap-range">-</b>
+    <b class="stat" id="frags">frags: 0</b>
+
+    <canvas id="canvas"></canvas>
+</div>
+<div id="dead" class="hidden"><div>DEAD</div></div>
+<div id="paused" class="hidden"><div>PAUSED</div></div>
+
+<script type="application/javascript">
+    let paused = true;
+    let dead = false;
+    let frags;
+    let scale = 10;
+    let W = 640;
+    let H = 480;
+    let w = W-scale;
+    let h = H-scale;
+    console.assert(W%scale === 0);
+    console.assert(H%scale === 0);
+
+    let frames_so_far = 0;
+    let move1 = undefined;
+    let move2 = undefined;
+    let player_x = 0;
+    let player_y = 0;
+    let player_move_rate = 1;
+    let player_move_px = 2
+    let enemy_move_rate = 3;
+    let enemy_move_px = 2;
+    let enemy_xs;
+    let enemy_ys;
+    let enemy_count;
+    let enemy_spawn_rate_cur;
+    let enemy_spawn_rate_min = 20;
+
+    let weapon_plus_rate;
+    let weapon_plus_range;
+    let weapon_plus_range_max = 15;
+    let weapon_plus_range_every_frags = 10;
+    let weapon_plus_frames;
+    let weapon_plus_frames_max = 7;
+    let weapon_plus_frames_every_frags = 30;
+    let render_plus_weapon;
+
+    abs = Math.abs;
+
+    const DEAD = document.getElementById("dead");
+    const pause = document.getElementById("paused");
+    const canvas = document.getElementById("canvas");
+    canvas.setAttribute("width", ""+W);
+    canvas.setAttribute("height", ""+H);
+
+    document.addEventListener("keydown", onKeyDown);
+    document.addEventListener("keyup", onKeyUp);
+
+    init();
+    togglePause();
+
+    function togglePause(e) {
+        paused = !paused;
+        if (paused) {
+            pause.setAttribute("class", "big");
+        } else {
+            pause.setAttribute("class", "hidden");
+            tick();
+        }
+    }
+
+    function init() {
+        frags = 0;
+        dead = false;
+        DEAD.setAttribute("class", "hidden");
+        frames_so_far = 0;
+        player_x = W/2;
+        player_y = H/2;
+        enemy_xs = [];
+        enemy_ys = [];
+        enemy_count = 0;
+        weapon_plus_rate = 50;
+        weapon_plus_range = 3;
+        weapon_plus_frames = 1;
+        enemy_spawn_rate_cur = 100;
+        document.getElementById("enemy-spawn-rate").innerText = "spawn rate: " + enemy_spawn_rate_cur;
+        weapStats();
+    }
+
+    function weapStats() {
+        document.getElementById("weap-frames").innerText = "weap frames: " + weapon_plus_frames;
+        document.getElementById("weap-range").innerText = "weap range: " + weapon_plus_range;
+    }
+
+    function spawnEnemyAt(i) {
+        let [x, y] = randEnemyXY();
+        enemy_xs[i] = x;
+        enemy_ys[i] = y;
+        enemy_count = enemy_xs.length;
+        document.getElementById("enemies").innerText = "enemies: " + enemy_count;
+    }
+
+    function getDirK(e) {
+        // console.log(e.code)
+        if (e.code === "KeyA" || e.code === "ArrowLeft")  {return "L";}
+        else if (e.code === "KeyD" || e.code === "ArrowRight") {return "R";}
+        else if (e.code === "KeyW" || e.code === "ArrowUp")    {return "U";}
+        else if (e.code === "KeyS" || e.code === "ArrowDown")  {return "D";}
+        return undefined;
+    }
+
+    function onKeyDown (e) {
+        let k = getDirK(e);
+        if (k) {
+            if (k !== move1 && k !== move2) {
+                [move1, move2] = [k, move1];  //push, [fresh, old]
+            }
+        }
+    }
+    function onKeyUp (e) {
+        if (e.code === "Escape" || e.code === "Space") {
+            if (dead) {
+                init();
+                paused = false;
+                tick()
+            } else {
+                togglePause();
+            }
+        } else {
+            let k = getDirK(e);
+            if (k) {
+                if (k === move1) {[move1, move2] = [move2, undefined]} //pop
+                if (k === move2) {[move1, move2] = [move1, undefined]}
+            }
+        }
+        // console.log("up", e);
+    }
+
+    function playerCollision() {
+        let i = enemy_count;
+        while (i--) {
+            if (abs(player_x - enemy_xs[i]) < scale &&
+                abs(player_y - enemy_ys[i]) < scale) {
+                paused = true;
+                dead = true;
+                DEAD.setAttribute("class", "big");
+                console.error("dead");
+                break;
+            }
+        }
+    }
+
+    function playerMove() {
+        if (frames_so_far % player_move_rate === 0) {
+            if (move1 === "L") {player_x = Math.max(0, player_x - player_move_px);}
+            else if (move1 === "R") {player_x = Math.min(w, player_x + player_move_px);}
+            else if (move1 === "U") {player_y = Math.max(0, player_y - player_move_px);}
+            else if (move1 === "D") {player_y = Math.min(h, player_y + player_move_px);}
+
+            if (move1 && move2) {
+                [move1, move2] = [move2, move1]; // плавно по-диагонали
+            }
+        }
+    }
+
+    function enemyMoveAndCollide() {
+        if (frames_so_far % enemy_move_rate === 0) {
+            let i = enemy_count;
+            while (i--) {
+                let ex = enemy_xs[i];
+                let ey = enemy_ys[i];
+                if ((abs(ex - player_x) > abs(ey - player_y))){
+                    if (ex < player_x) {ex = ex + enemy_move_px} else {ex = ex - enemy_move_px}
+                } else {
+                    if (ey < player_y) {ey = ey + enemy_move_px} else {ey = ey - enemy_move_px}
+                }
+
+                let collides = false;
+                let j = i;
+                while(j++ < enemy_count) {
+                    if (abs(ex - enemy_xs[j]) < scale &&
+                        abs(ey - enemy_ys[j]) < scale) {
+                        collides = true;
+                        break;
+                    }
+                }
+                if (!collides) {enemy_xs[i] = ex; enemy_ys[i] = ey;}
+            }
+        }
+    }
+
+    function enemyWeaponCollision() {
+        if (render_plus_weapon) {
+            let i = enemy_count;
+            while (i--) {
+                let dx = abs(enemy_xs[i] - player_x);
+                let dy = abs(enemy_ys[i] - player_y);
+                let range = (weapon_plus_range + 1) * scale;
+                // within plus -> gets killed:
+                if (((dx <= range) && (dy <= scale))
+                    ||  ((dy <= range) && (dx <= scale))) {
+                    frags = frags + 1;
+                    document.getElementById("frags").innerText = "frags: " + frags;
+                    spawnEnemyAt(i);
+                    if (frags % weapon_plus_range_every_frags === 0
+                        &&  weapon_plus_range < weapon_plus_range_max) {
+                        weapon_plus_range = weapon_plus_range + 1;
+                        weapStats();
+                    }
+                    if (frags % weapon_plus_frames_every_frags === 0
+                        &&  weapon_plus_frames < weapon_plus_frames_max) {
+                        weapon_plus_frames = weapon_plus_frames + 1;
+                        weapStats();
+                    }
+                    if (enemy_spawn_rate_cur > enemy_spawn_rate_min) {
+                        enemy_spawn_rate_cur = enemy_spawn_rate_cur - 1;
+                        document.getElementById("enemy-spawn-rate").innerText = "spawn rate: " + enemy_spawn_rate_cur;
+                    }
+                }
+            }
+        }
+    }
+
+    function tick() {
+        // console.time("x")
+        if (paused) {
+
+        } else {
+            document.getElementById("frames_so_far").innerText = "frames: " + frames_so_far;
+
+            render_plus_weapon = frames_so_far % weapon_plus_rate < weapon_plus_frames;
+
+            playerCollision();
+            playerMove();
+            enemyMoveAndCollide();
+            enemyWeaponCollision()
+
+            if (frames_so_far % enemy_spawn_rate_cur === 0) { spawnEnemyAt(enemy_count);}
+
+            // reset canvas:
+            const ctx = canvas.getContext("2d");
+            ctx.fillStyle = "white";
+            ctx.fillRect(0, 0, W, H);
+
+            //reder enemies:
+            ctx.fillStyle = "mediumturquoise";
+            i = enemy_count;
+            while (i--) {
+                ctx.fillRect(enemy_xs[i], enemy_ys[i], scale, scale);
+            }
+
+            // render player:
+            ctx.fillStyle = "tomato";
+            ctx.fillRect(player_x, player_y, scale, scale);
+
+
+            if (render_plus_weapon) {
+                ctx.fillStyle = "#DA70D6AA"
+                let width = (scale*(1 + weapon_plus_range + weapon_plus_range));
+                let length = scale * weapon_plus_range;
+                ctx.fillRect(player_x-length, player_y, width, scale);
+                ctx.fillRect(player_x, player_y-length, scale, width);
+            }
+
+
+            frames_so_far = frames_so_far + 1;
+            // console.timeEnd("x")
+            window.requestAnimationFrame(tick);
+        }
+    }
+
+    function randX()        {return Math.floor(Math.random() * w);}
+    function randY()        {return Math.floor(Math.random() * h);}
+    function randNth(vec)   {return vec[rand(vec.length)]}
+
+    function randEnemyXY () {
+        let x = rand(w);
+        let y = rand(h);
+        return randNth([[x, 0], [x, h], [0, y], [w, y]])}
+
+    function rand(max) {
+        return Math.floor(Math.random() * max);
+    }
+    function randInRange(min, max) {
+        return Math.random() * (max - min) + min;
+    }
+</script>
+
+</body>
+</html>
