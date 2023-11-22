@@ -97,9 +97,9 @@ y:hover {
 }
 
 
-</style></head><body><style id="css-username">w {min-width: 152px;} r {min-width: 184px;}</style><style id="css-text-filter"></style><style id="css-date-filter"></style><style id="css-filter-override"></style><p id="filters-container"><input id="text-filter" onkeyup="debtextfilter(this.value)" placeholder="filter text" type="string" /><button hidden="hidden" id="date-filter" onclick="cleardatefilter()"></button></p><h2>#instaparse</h2><pre><i>generated UTC: 2023-02-13 19:05</i><i>
-latest data: <a href="https://clojurians-log.clojureverse.org/instaparse/2023-02-09">https://clojurians-log.clojureverse.org/instaparse/2023-02-09</a></i><i>
-messages: 1728</i>
+</style></head><body><style id="css-username">w {min-width: 152px;} r {min-width: 184px;}</style><style id="css-text-filter"></style><style id="css-date-filter"></style><style id="css-filter-override"></style><p id="filters-container"><input id="text-filter" onkeyup="debtextfilter(this.value)" placeholder="filter text" type="string" /><button hidden="hidden" id="date-filter" onclick="cleardatefilter()"></button></p><h2>#instaparse</h2><pre><i>generated UTC: 2023-11-22 19:43</i><i>
+latest data: <a href="https://clojurians-log.clojureverse.org/instaparse/2023-11-09">https://clojurians-log.clojureverse.org/instaparse/2023-11-09</a></i><i>
+messages: 1778</i>
 pro tips:
 * Double click on text to filter by it. (doubleclick + cmd-f for extra points).
 * Click on date to keep day visible regardless of filter.
@@ -1428,4 +1428,165 @@ tag-close = &apos;&gt;&apos;
 &quot;</pre>
 I feel like I&apos;m missing an understanding of some basic piece. I also don&apos;t know how to separate xml tags from these first kind of tags. Please help.</z><z id="t1675096505" t="thom This is presumably some form of SGML. You can probably find a Java library that’ll parse it already, but also most HTML libraries will do little fixups to unclosed tags (lots based on JSoup etc). If you want to parse it yourself you just need to introduce opening and closing tags to your grammar and make the closing ones optional."><y>#</y><d>2023-01-30</d><h>16:35</h><r>thom</r>This is presumably some form of SGML. You can probably find a Java library that’ll parse it already, but also most HTML libraries will do little fixups to unclosed tags (lots based on JSoup etc). If you want to parse it yourself you just need to introduce opening and closing tags to your grammar and make the closing ones optional.</z><z id="t1675933199" t="Sigve If anyone here is in the small subset of people using both Instaparse and (n)vim, i made a syntax file with some instaparse-specific things that makes it a bit nicer than using ebnf.vim or similar. Also includes a very basic indent script https://github.com/sigvesn/instaparse.vim"><y>#</y><d>2023-02-09</d><h>08:59</h><w>Sigve</w>If anyone here is in the small subset of people using both Instaparse and (n)vim, i made a syntax file with some instaparse-specific things that makes it a bit nicer than using ebnf.vim or similar. Also includes a very basic indent script
 
-<a href="https://github.com/sigvesn/instaparse.vim" target="_blank">https://github.com/sigvesn/instaparse.vim</a></z></g></div></body>
+<a href="https://github.com/sigvesn/instaparse.vim" target="_blank">https://github.com/sigvesn/instaparse.vim</a></z><z id="t1677787260" t="Markus Hello y’all! I’m working on generating regular grammars using genetic programming. Now, I’m not completely sure how to use instaparse or, more specifically, I’m not quite sure how to write my rules, so that instaparse produces the desired output. I’m testing instaparse using tomita grammars and for that I’m converting some FSMs to rulesets. I got really confused using tomita-3 and instaparse, since the rules would be A -&gt; &apos;a&apos;A A -&gt; &apos;b&apos;B A -&gt; eps B -&gt; &apos;b&apos;A B -&gt; &apos;a&apos;C B -&gt; eps C -&gt; &apos;a&apos;D D -&gt; &apos;a&apos;C D -&gt; &apos;b&apos;E D -&gt; eps but when I typed the ruleset into instaparse using = instead of the -&gt; of my specification, it wasn’t parsing anything. What would be the correct way to rewrite these rules for instaparse?"><y>#</y><d>2023-03-02</d><h>20:01</h><w>Markus</w>Hello y’all! I’m working on generating regular grammars using genetic programming. Now, I’m not completely sure how to use instaparse or, more specifically, I’m not quite sure how to write my rules, so that instaparse produces the desired output.
+I’m testing instaparse using tomita grammars and for that I’m converting some FSMs to rulesets. I got really confused using tomita-3 and instaparse, since the rules would be
+<pre>A -&gt; &apos;a&apos;A
+A -&gt; &apos;b&apos;B
+A -&gt; eps
+B -&gt; &apos;b&apos;A
+B -&gt; &apos;a&apos;C
+B -&gt; eps
+C -&gt; &apos;a&apos;D
+D -&gt; &apos;a&apos;C
+D -&gt; &apos;b&apos;E
+D -&gt; eps</pre>
+but when I typed the ruleset into instaparse using <code>=</code> instead of the <code>-&gt;</code> of my specification, it wasn’t parsing anything. What would be the correct way to rewrite these rules for instaparse?</z><z id="t1677787456" t="Markus When I’m saying it wasn’t parsing anything, I actually mean that it was parsing valid words of tomita-3 as empty arrays or returning a failure ."><y>#</y><d>2023-03-02</d><h>20:04</h><r>Markus</r>When I’m saying it wasn’t parsing anything, I actually mean that it was parsing valid words of tomita-3 as empty arrays or returning a <code>failure</code>.</z><z id="t1677856837" t="Markus For anyone else looking for a solution: It seems that instaparse strongly adheres to EBNF, which means that each non-terminal can only be defined once. This means, that all possible production rules for one non-terminal have to be concatenated with | like this: A = &apos;a&apos;A | &apos;b&apos;B | eps B = &apos;b&apos;A | &apos;a&apos;C | eps C = &apos;a&apos;D D = &apos;a&apos;C | &apos;b&apos;D | eps"><y>#</y><d>2023-03-03</d><h>15:20</h><r>Markus</r>For anyone else looking for a solution:
+It seems that instaparse strongly adheres to EBNF, which means that each non-terminal can only be defined once. This means, that all possible production rules for one non-terminal have to be concatenated with <code>|</code> like this:
+<pre>A = &apos;a&apos;A | &apos;b&apos;B | eps
+B = &apos;b&apos;A | &apos;a&apos;C | eps
+C = &apos;a&apos;D
+D = &apos;a&apos;C | &apos;b&apos;D | eps</pre></z><z id="t1680901743" t="port19 I&apos;m working on a Lexer as part of following along with my college course on compilers. I tried to refactor my handwritten scanner for AS ::= { peter | petra | anna } , but didn&apos;t have much success using instaparse. Am I hitting a hammer with a chainsaw or am I missing something obvious? My small lexer is best viewed through this Clerk Notebook: https://port19.xyz/compnotes/"><y>#</y><d>2023-04-07</d><h>21:09</h><w>port19</w>I&apos;m working on a Lexer as part of following along with my college course on compilers.
+I tried to refactor my handwritten scanner for <code>AS ::= { peter | petra | anna }</code>, but didn&apos;t have much success using instaparse.
+Am I hitting a hammer with a chainsaw or am I missing something obvious?
+My small lexer is best viewed through this Clerk Notebook: <a href="https://port19.xyz/compnotes/" target="_blank">https://port19.xyz/compnotes/</a></z><z id="t1680915496" t="hiredman Instaparse is, I believe, a scannerless parser, meaning it is more powerful than a scanner (it can construct parse trees, not just return a stream of tokens), and also skips the intermediate step of scanning input into a stream of tokens and then build parse trees out of the stream of tokens"><y>#</y><d>2023-04-08</d><h>00:58</h><r>hiredman</r>Instaparse is, I believe, a scannerless parser, meaning it is more powerful than a scanner (it can construct parse trees, not just return a stream of tokens), and also skips the intermediate step of scanning input into a stream of tokens and then build parse trees out of the stream of tokens</z><z id="t1680915528" t="hiredman So I am not sure why you would use it to construct a scanner"><y>#</y><d>2023-04-08</d><h>00:58</h><r>hiredman</r>So I am not sure why you would use it to construct a scanner</z><z id="t1680935050" t="port19 Fair enough"><y>#</y><d>2023-04-08</d><h>06:24</h><r>port19</r>Fair enough</z><z id="t1680944845" t="port19 Are you aware of some scanner generator library? Or should I take this as an opportunity to write a scanner generator myself, perhaps even with macros if possible?"><y>#</y><d>2023-04-08</d><h>09:07</h><r>port19</r>Are you aware of some scanner generator library?
+Or should I take this as an opportunity to write a scanner generator myself, perhaps even with macros if possible?</z><z id="t1682181418" t="diego.videco Need some help with my grammar. I have this (simplified): pattern = (&lt;whitespace&gt;? token)* &lt;token&gt; = word | cat cat = pattern &lt;whitespace&gt; &lt;&apos;.&apos;&gt; &lt;whitespace&gt; pattern whitespace = #&quot;\s+&quot; word = #&quot;[a-zA-Z]+&quot; And with this test string &quot;a b . c&quot; I get this result: [:pattern [:word &quot;a&quot;] [:cat [:pattern [:word &quot;b&quot;]] [:pattern]] [:word &quot;c&quot;]] But I am expecting to get this: [:pattern [:cat [:pattern [:word &quot;a&quot;] [:word &quot;b&quot;]] [:pattern [:word &quot;c&quot;]]]] However this string does provide the correct results: &quot; a b . c&quot; (notice the whitespace at the beginning). Any ideas how I can get the expected result?"><y>#</y><d>2023-04-22</d><h>16:36</h><w>diego.videco</w>Need some help with my grammar. I have this (simplified):
+<pre>pattern = (&lt;whitespace&gt;? token)*
+&lt;token&gt; = word | cat
+cat = pattern &lt;whitespace&gt; &lt;&apos;.&apos;&gt; &lt;whitespace&gt; pattern
+whitespace = #&quot;\s+&quot;
+word = #&quot;[a-zA-Z]+&quot;</pre>
+And with this test string <code>&quot;a b . c&quot;</code>  I get this result:
+<pre>[:pattern
+ [:word &quot;a&quot;]
+ [:cat
+  [:pattern [:word &quot;b&quot;]]
+  [:pattern]]
+ [:word &quot;c&quot;]]</pre>
+But I am expecting to get this:
+<pre>[:pattern
+ [:cat
+  [:pattern [:word &quot;a&quot;] [:word &quot;b&quot;]]
+  [:pattern [:word &quot;c&quot;]]]]</pre>
+However this string does provide the correct results: <code>&quot; a b . c&quot;</code>  (notice the whitespace at the beginning).
+
+Any ideas how I can get the expected result?</z><z id="t1682184059" t="hiredman Make your grammar unambiguous, given that input, both what instaparse gives and what you expect are valid parses according to your grammar, I would expect if you asked instaparse for all the parses instead of just taking the first one it comes up with you would get both trees"><y>#</y><d>2023-04-22</d><h>17:20</h><w>hiredman</w>Make your grammar unambiguous, given that input, both what instaparse gives and what you expect are valid parses according to your grammar, I would expect if you asked instaparse for all the parses instead of just taking the first one it comes up with you would get both trees</z><z id="t1682184209" t="hiredman You have essentially two loops in your grammar, one is implicit in using * at the end of pattern, and the other goes pattern -&gt; token -&gt; cat -&gt; pattern"><y>#</y><d>2023-04-22</d><h>17:23</h><w>hiredman</w>You have essentially two loops in your grammar, one is implicit in using * at the end of pattern, and the other goes pattern -&gt; token -&gt; cat -&gt; pattern</z><z id="t1682184220" t="hiredman And those overlap in what they recognize"><y>#</y><d>2023-04-22</d><h>17:23</h><w>hiredman</w>And those overlap in what they recognize</z><z id="t1682192898" t="diego.videco Thanks, that worked"><y>#</y><d>2023-04-22</d><h>19:48</h><w>diego.videco</w>Thanks, that worked</z><z id="t1682830778" t="diego.videco How can I disambiguate a grammar. I have this a?0.1 0.3 that returns this two parses: {:parses ([:pattern [:cat [:degrade [:word &quot;a&quot;] [:op-degrade]] [:float &quot;0.1&quot;] [:float &quot;0.3&quot;]]] [:pattern [:cat [:degrade [:word &quot;a&quot;] [:op-degrade [:degrade-amount &quot;0.1&quot;]]] [:float &quot;0.3&quot;]]])} I would just like to have the latter. Relevant parts of my grammar look like this: pattern = cat (&lt;ws&gt; &lt;&apos;.&apos;&gt; &lt;ws&gt; cat)* ws = #&quot;\s+&quot; word = #&quot;[a-zA-Z0-9]([a-zA-Z0-9]*)&quot; int = #&quot;[0-9]+&quot; float = #&quot;(?&lt;!\?)\d+(\.\d+)&quot; &lt;token&gt; = word | int | float | degrade cat = token (&lt;ws&gt;? token)* degrade-amount = #&quot;([0-9]*[.])?[0-9]+&quot; op-degrade = &lt;&apos;?&apos;&gt; degrade-amount? degrade = token op-degrade I am trying to have different regexes for float and degrade-amount , but it’s not actually working. I also tried this: float = (!&apos;?&apos; #&quot;\d+(\.\d+)&quot;) but doesn’t seem to work."><y>#</y><d>2023-04-30</d><h>04:59</h><w>diego.videco</w>How can I disambiguate a grammar.
+
+I have this <code>a?0.1 0.3</code> that returns this two parses:
+<pre>{:parses
+    ([:pattern
+      [:cat [:degrade [:word &quot;a&quot;] [:op-degrade]] [:float &quot;0.1&quot;] [:float &quot;0.3&quot;]]]
+     [:pattern
+      [:cat
+       [:degrade [:word &quot;a&quot;] [:op-degrade [:degrade-amount &quot;0.1&quot;]]]
+       [:float &quot;0.3&quot;]]])}</pre>
+I would just like to have the latter.
+
+Relevant parts of my grammar look like this:
+
+<pre>pattern = cat (&lt;ws&gt; &lt;&apos;.&apos;&gt; &lt;ws&gt; cat)*
+
+ws = #&quot;\s+&quot;
+word = #&quot;[a-zA-Z0-9]([a-zA-Z0-9]*)&quot;
+int = #&quot;[0-9]+&quot;
+float = #&quot;(?&lt;!\?)\d+(\.\d+)&quot;
+&lt;token&gt; = word | int | float | degrade
+
+cat = token (&lt;ws&gt;? token)*
+degrade-amount = #&quot;([0-9]*[.])?[0-9]+&quot;
+op-degrade = &lt;&apos;?&apos;&gt; degrade-amount?
+degrade = token op-degrade</pre>
+I am trying to have different regexes for <code>float</code> and <code>degrade-amount</code> , but it’s not actually working.  I also tried this: <code>float = (!&apos;?&apos; #&quot;\d+(\.\d+)&quot;)</code>  but doesn’t seem to work.</z><z id="t1682965713" t="ghaskins [:attrs {:href &quot;/_/_/users/U7AMPCPU2&quot;}] it strikes me that you can probably accomplish disambiguation here using the ordered-choice feature ( https://github.com/Engelberg/instaparse#ordered-choice )"><y>#</y><d>2023-05-01</d><h>18:28</h><w>ghaskins</w><a>@diego.vid.eco</a> it strikes me that you can probably accomplish disambiguation here using the ordered-choice feature (<a href="https://github.com/Engelberg/instaparse#ordered-choice" target="_blank">https://github.com/Engelberg/instaparse#ordered-choice</a>)</z><z id="t1682982647" t="aengelberg Yes, try something like op-degrade = (&lt;&apos;?&apos;&gt; degrade-amount) / &lt;&apos;?&apos;&gt;"><y>#</y><d>2023-05-01</d><h>23:10</h><w>aengelberg</w>Yes, try something like
+<pre>op-degrade = (&lt;&apos;?&apos;&gt; degrade-amount) / &lt;&apos;?&apos;&gt;</pre></z><z id="t1683087312" t="diego.videco Thanks [:attrs {:href &quot;/_/_/users/U0516PHE3&quot;}] and [:attrs {:href &quot;/_/_/users/U13AR6ME1&quot;}] , actually my insta/parse was working as expected (prioritizing the correct version) but insta/parses is still showing more than one possibility, though I guess that this might prevent cases where the first parse is not the one I want right?"><y>#</y><d>2023-05-03</d><h>04:15</h><w>diego.videco</w>Thanks <a>@aengelberg</a> and <a>@ghaskins</a>, actually my <code>insta/parse</code>  was working as expected (prioritizing the correct version) but <code>insta/parses</code> is still showing more than one possibility, though I guess that this might prevent cases where the first parse is not the one I want right?</z><z id="t1683087600" t="aengelberg Ah, yes, ordered choice still gives you all the possible parses. If you want it to be unambiguous, try a negative look ahead. op-degrade = (&lt;&apos;?&apos;&gt; degrade-amount) | &lt;&apos;?&apos;&gt; !degrade-amount"><y>#</y><d>2023-05-03</d><h>04:20</h><r>aengelberg</r>Ah, yes, ordered choice still gives you all the possible parses. If you want it to be unambiguous, try a negative look ahead.
+
+<pre>op-degrade = (&lt;&apos;?&apos;&gt; degrade-amount) | &lt;&apos;?&apos;&gt; !degrade-amount</pre></z><z id="t1683159938" t="diego.videco Thanks, that works great!"><y>#</y><d>2023-05-04</d><h>00:25</h><r>diego.videco</r>Thanks, that works great!</z><z id="t1683159967" t="diego.videco I believe I was missusing the negative look ahead syntax. I appreciate the example!"><y>#</y><d>2023-05-04</d><h>00:26</h><r>diego.videco</r>I believe I was missusing the negative look ahead syntax. I appreciate the example!</z><z id="t1683676960" t="jacob.maine We’re parsing large documents. We’ve found we get better performance (memory and CPU) if we split the documents up into chunks, and then parse each chunk separately. This keeps the grammar smaller and aligns with https://github.com/Engelberg/instaparse/blob/master/docs/Performance.md#performance-tips . However, we also need to keep track of line and column numbers of the original document, which doesn’t work very well with the chunked approach. Say we have two chunks, lines 1-10 and lines 11-20. When we use insta/add-line-and-column-info-to-metadata on the second chunk, the line metadata starts at line 1, not line 11. At the moment we have a collection of helpers to walk the metadata after it’s generated, and offset it. But I was wondering if anyone has a better approach. I’ve submitted a PR with https://github.com/Engelberg/instaparse/pull/226 , which pushes the complexity into instaparse itself. But if anyone has other tricks, I’d love to hear."><y>#</y><d>2023-05-10</d><h>00:02</h><w>jacob.maine</w>We’re parsing large documents. We’ve found we get better performance (memory and CPU) if we split the documents up into chunks, and then parse each chunk separately. This keeps the grammar smaller and aligns with <a href="https://github.com/Engelberg/instaparse/blob/master/docs/Performance.md#performance-tips" target="_blank">https://github.com/Engelberg/instaparse/blob/master/docs/Performance.md#performance-tips</a>.
+
+However, we also need to keep track of line and column numbers of the original document, which doesn’t work very well with the chunked approach. Say we have two chunks, lines 1-10 and lines 11-20. When we use <code>insta/add-line-and-column-info-to-metadata</code> on the second chunk, the line metadata starts at line 1, not line 11.
+
+At the moment we have a collection of helpers to walk the metadata after it’s generated, and offset it. But I was wondering if anyone has a better approach.
+
+I’ve submitted a PR with <a href="https://github.com/Engelberg/instaparse/pull/226" target="_blank">https://github.com/Engelberg/instaparse/pull/226</a>, which pushes the complexity into instaparse itself. But if anyone has other tricks, I’d love to hear.</z><z id="t1684094002" t="thom clj-antlr is much faster than Instaparse if performance remains an issue. Not quite as nice an API though."><y>#</y><d>2023-05-14</d><h>19:53</h><r>thom</r>clj-antlr is much faster than Instaparse if performance remains an issue. Not quite as nice an API though.</z><z id="t1684164623" t="jacob.maine Thanks, I’ll check that out!"><y>#</y><d>2023-05-15</d><h>15:30</h><r>jacob.maine</r>Thanks, I’ll check that out!</z><z id="t1685208379" t="tbrooke I am trying to port a grammar from pegjs and it says it is an abnf grammar. I does not work the grammar starts like this: /* ----- A.1 Lexical Grammar ----- */ SourceCharacter = . WhiteSpace “whitespace” = “\t” / “\v” / “\f” / ” ” / “\u00A0” / “\uFEFF” / Zs LineTerminator = [\n\r\u2028\u2029] What is this and can I translate it to something Instaparse understands?"><y>#</y><d>2023-05-27</d><h>17:26</h><w>tbrooke</w>I am trying to port a grammar from pegjs and it says it is an abnf grammar. I does not work the grammar starts like this:
+
+<code>/* ----- A.1 Lexical Grammar ----- */</code>
+
+SourceCharacter
+  = .
+
+WhiteSpace “whitespace”
+  = “\t”
+  / “\v”
+  / “\f”
+  / ” ”
+  / “\u00A0”
+  / “\uFEFF”
+  / Zs
+
+LineTerminator
+  = [\n\r\u2028\u2029]
+
+What is this and can I translate it to something Instaparse understands?</z><z id="t1685227677" t="hiredman Looks nothing like the example abnf here https://en.m.wikipedia.org/wiki/Augmented_Backus%E2%80%93Naur_form"><y>#</y><d>2023-05-27</d><h>22:47</h><r>hiredman</r>Looks nothing like the example abnf here <a href="https://en.m.wikipedia.org/wiki/Augmented_Backus%E2%80%93Naur_form" target="_blank">https://en.m.wikipedia.org/wiki/Augmented_Backus%E2%80%93Naur_form</a></z><z id="t1685227756" t="hiredman The &quot;whitespace&quot; (quoted like a terminal?) on the left of the = is like no grammar I&apos;ve seen before"><y>#</y><d>2023-05-27</d><h>22:49</h><r>hiredman</r>The &quot;whitespace&quot; (quoted like a terminal?) on the left of the = is like no grammar I&apos;ve seen before</z><z id="t1685228185" t="hiredman Ah, pegjs has its own grammar syntax, what you are likely looking at is the grammar for abnf grammars, written in the pegjs grammar syntax"><y>#</y><d>2023-05-27</d><h>22:56</h><r>hiredman</r>Ah, pegjs has its own grammar syntax, what you are likely looking at is the grammar for abnf grammars, written in the pegjs grammar syntax</z><z id="t1685230119" t="tbrooke Thank You - So it looks like I need to figure out pegjs grammar and manually translate to abnf"><y>#</y><d>2023-05-27</d><h>23:28</h><r>tbrooke</r>Thank You - So it looks like I need to figure out pegjs grammar and manually translate to abnf</z><z id="t1685978308" t="tbrooke I am trying to parse a grammar that I would think would not be too difficult for Instaparse, I have looked at the tutorials and googled but I can actually find very few examples of instaparse grammars. The format I am parsing is as follows. Does anyone have an an example of something similar that would help me get a handle on this: namespace concept address { o String street } concept person { o String name o Integer age o Address address optional }"><y>#</y><d>2023-06-05</d><h>15:18</h><w>tbrooke</w>I am trying to parse a grammar that I would  think would not be too difficult for Instaparse, I have looked at the tutorials and googled but I can actually find very few examples of instaparse grammars. The format I am parsing is as follows. Does anyone have an an example of something similar  that would help me get a handle on this:
+<code>namespace </code>
+
+    <code>concept address {</code>
+        <code>o String street</code>
+    <code>}</code>
+
+    <code>concept person {</code>
+        <code>o String name</code>
+        <code>o Integer age</code>
+        <code>o Address address optional</code>
+    <code>}</code></z><z id="t1685980773" t="respatialized In my experience the best thing to do is to try and write the grammar in EBNF by hand on paper before specifying it in code. It always forces my to clarify the structure in my mind."><y>#</y><d>2023-06-05</d><h>15:59</h><r>respatialized</r>In my experience the best thing to do is to try and write the grammar in EBNF by hand on paper before specifying it in code. It always forces my to clarify the structure in my mind.</z><z id="t1692142857" t="tbrooke My deps.edn is this: {:paths [&quot;src&quot;] :deps {org.clojure/clojure {:mvn/version “1.10.1&quot;} instaparse/instaparse {:mvn/version “1.4.12”}}} in my file I have:`(ns scratch` (:require [instaparse.core :as insta ] [ http://clojure.java.io :as io])))) (def xx (insta/parser “S = AB* AB = A B A = ‘a’+ B = ‘b’+“)) I get this error (it used to work I can’t figure out why it stopped: ; Syntax error compiling at (src/scratch.clj:6:3). ; No such namespace: insta Any suggestions?"><y>#</y><d>2023-08-15</d><h>23:40</h><w>tbrooke</w>My deps.edn is this: <code>{:paths [&quot;src&quot;]</code>
+ :deps {org.clojure/clojure {:mvn/version “1.10.1&quot;}
+                 instaparse/instaparse {:mvn/version “1.4.12”}}}
+
+in my file I have:`(ns scratch`
+    (:require [instaparse.core :as insta ]
+              [<a href="http://clojure.java.io" target="_blank">http://clojure.java.io</a> :as io]))))
+
+(def xx
+  (insta/parser
+   “S = AB*
+     AB = A B
+     A = ‘a’+
+     B = ‘b’+“))
+
+I get this error (it used to work I can’t figure out why it stopped: <code>; Syntax error compiling at (src/scratch.clj:6:3).</code>
+; No such namespace: insta
+
+Any suggestions?</z><z id="t1692218816" t="Samuel Ludwig when you first started your REPL, did you see the library getting downloaded? also, if you surround code in three backticks like &apos;`&apos; &lt;put&gt; &lt;code&gt; &lt;here&gt; &apos;`&apos; it&apos;ll come out a little nicer &lt;like&gt; &lt;so&gt;"><y>#</y><d>2023-08-16</d><h>20:46</h><r>Samuel Ludwig</r>when you first started your REPL, did you see the library getting downloaded?
+
+also, if you surround code in three backticks like
+
+
+
+&apos;`&apos;
+&lt;put&gt;
+  &lt;code&gt;
+    &lt;here&gt;
+&apos;`&apos;
+
+it&apos;ll come out a little nicer
+
+<pre>&lt;like&gt;
+  &lt;so&gt;</pre></z><z id="t1692230560" t="tbrooke I’m an idiot extra parenthesis in the ns"><y>#</y><d>2023-08-17</d><h>00:02</h><r>tbrooke</r>I’m an idiot extra parenthesis in the ns</z><z id="t1694016448" t="roklenarcic Hi. I am trying to create a very simple parser but I don’t undestand why it fails. If I have the following parser: S = E; E = &apos;N&apos; | &apos;W&apos; | &apos;S&apos; | &apos;E&apos; Then (parser &quot;N&quot;) =&gt; [:S [:E &quot;N&quot;]] but if I add a rule to expand to multiple it stops parsing: S = E; E = &apos;N&apos; | &apos;W&apos; | &apos;S&apos; | &apos;E&apos;; E = E E; (parser &quot;N&quot;) =&gt; Parse error at line 1, column 1: N ^ Seems odd that adding more production rules would make it parse less…."><y>#</y><d>2023-09-06</d><h>16:07</h><w>roklenarcic</w>Hi. I am trying to create a very simple parser but I don’t undestand why it fails. If I have the following parser:
+<code>S = E; E = &apos;N&apos; | &apos;W&apos; | &apos;S&apos; | &apos;E&apos;</code>
+Then
+<pre>(parser &quot;N&quot;)
+=&gt; [:S [:E &quot;N&quot;]]</pre>
+but if I add a rule to expand to multiple it stops parsing:
+<pre>S = E; E = &apos;N&apos; | &apos;W&apos; | &apos;S&apos; | &apos;E&apos;; E = E E;
+(parser &quot;N&quot;)
+=&gt; Parse error at line 1, column 1:
+N
+^</pre>
+Seems odd that adding more production rules would make it parse less….</z><z id="t1694016754" t="hiredman am not sure, but I would try adding the second E production as an alternative to the first E production"><y>#</y><d>2023-09-06</d><h>16:12</h><r>hiredman</r>am not sure, but I would try adding the second E production as an alternative to the first E production</z><z id="t1694018118" t="roklenarcic Hm I’ll just rewrite it all I think"><y>#</y><d>2023-09-06</d><h>16:35</h><r>roklenarcic</r>Hm I’ll just rewrite it all I think</z><z id="t1694018175" t="roklenarcic Another puzzle: S = DIR+; DIR = (&apos;N&apos; | &apos;W&apos; | &apos;S&apos; | &apos;E&apos;)+; This produces: (parser2 &quot;WWWW&quot;) =&gt; [:S [:DIR &quot;W&quot;] [:DIR &quot;W&quot;] [:DIR &quot;W&quot;] [:DIR &quot;W&quot;]] I would prefers that DIR was greedy in that it would only parse as a single element if there are multiple letters in a row… how would I do that?"><y>#</y><d>2023-09-06</d><h>16:36</h><w>roklenarcic</w>Another puzzle:
+<pre>S = DIR+; DIR = (&apos;N&apos; | &apos;W&apos; | &apos;S&apos; | &apos;E&apos;)+;</pre>
+This produces:
+<pre>(parser2 &quot;WWWW&quot;)
+=&gt; [:S [:DIR &quot;W&quot;] [:DIR &quot;W&quot;] [:DIR &quot;W&quot;] [:DIR &quot;W&quot;]]</pre>
+I would prefers that <code>DIR</code> was greedy in that it would only parse as a single element if there are multiple letters in a row… how would I do that?</z><z id="t1694018394" t="hiredman https://github.com/engelberg/instaparse#ambiguous-grammars"><y>#</y><d>2023-09-06</d><h>16:39</h><r>hiredman</r><a href="https://github.com/engelberg/instaparse#ambiguous-grammars" target="_blank">https://github.com/engelberg/instaparse#ambiguous-grammars</a></z><z id="t1699554305" t="Giles Alexander Hi, I’m having a weird issue with instaparse. I’ve written a grammar using EBNF. When parsing moderately long (~200 lines) documents using that grammar, if the document has an error then Instaparse will go into an infinite loop, but only if the document uses DOS line endings. Huh? If the document uses UNIX line endings, then Instaparse reports the error. EOL is part of the syntax of the grammar, and I have defined a terminal (&apos;\r\n&apos; | &apos;\n&apos; | &apos;\r&apos; | #&quot;$&quot;) . There’s got to be something wrong with my grammar, and I want to fix that. But, it seems odd that I’m able to drop Instaparse into an infinite loop with only changing the line endings. Anyone have any ideas where I should start to look to produce a simpler test case? Thanks 🙏"><y>#</y><d>2023-11-09</d><h>18:25</h><w>Giles Alexander</w>Hi, I’m having a weird issue with instaparse. I’ve written a grammar using EBNF. When parsing moderately long (~200 lines) documents using that grammar, if the document has an error then Instaparse will go into an infinite loop, but only if the document uses DOS line endings. Huh? If the document uses UNIX line endings, then Instaparse reports the error.
+
+EOL is part of the syntax of the grammar, and I have defined a terminal <code>(&apos;\r\n&apos; | &apos;\n&apos; | &apos;\r&apos; | #&quot;$&quot;)</code>.
+
+There’s got to be something wrong with my grammar, and I want to fix that. But, it seems odd that I’m able to drop Instaparse into an infinite loop with only changing the line endings.
+
+Anyone have any ideas where I should start to look to produce a simpler test case? Thanks <b>🙏</b></z><z id="t1699554463" t="aengelberg So it infinite loops if the input has \r\n ?"><y>#</y><d>2023-11-09</d><h>18:27</h><r>aengelberg</r>So it infinite loops if the input has <code>\r\n</code> ?</z><z id="t1699554516" t="Giles Alexander Not exactly. Infinite loops if the document has \r\n and the document otherwise has a parse error."><y>#</y><d>2023-11-09</d><h>18:28</h><r>Giles Alexander</r>Not exactly. Infinite loops if the document has <code>\r\n</code> and the document otherwise has a parse error.</z><z id="t1699554625" t="aengelberg I think #&quot;$&quot; might be dicey because it will detect the end of a line, not consume it (because it parses zero characters), meaning you could parse infinite empty lines in a row"><y>#</y><d>2023-11-09</d><h>18:30</h><r>aengelberg</r>I think <code>#&quot;$&quot;</code> might be dicey because it will detect the end of a line, not consume it (because it parses zero characters), meaning you could parse infinite empty lines in a row</z><z id="t1699554658" t="Giles Alexander Ahhh… I’m trying to match end of input as the same as an end of line"><y>#</y><d>2023-11-09</d><h>18:30</h><r>Giles Alexander</r>Ahhh… I’m trying to match end of input as the same as an end of line</z><z id="t1699554664" t="aengelberg Also, $ detects the end of a line, not the end of the file"><y>#</y><d>2023-11-09</d><h>18:31</h><r>aengelberg</r>Also, $ detects the end of a line, not the end of the file</z><z id="t1699554707" t="Giles Alexander \z instead?"><y>#</y><d>2023-11-09</d><h>18:31</h><r>Giles Alexander</r><code>\z</code> instead?</z><z id="t1699554736" t="aengelberg Yeah, that seems closer to what you want"><y>#</y><d>2023-11-09</d><h>18:32</h><r>aengelberg</r>Yeah, that seems closer to what you want</z><z id="t1699554760" t="Giles Alexander Thanks! I’ll give it a try. And see if I can produce something to repro the infinite loop with that and without that change"><y>#</y><d>2023-11-09</d><h>18:32</h><r>Giles Alexander</r>Thanks! I’ll give it a try. And see if I can produce something to repro the infinite loop with that and without that change</z><z id="t1699554787" t="aengelberg I&apos;d still be a little concerned at the potential for matching infinite EOF&apos;s"><y>#</y><d>2023-11-09</d><h>18:33</h><r>aengelberg</r>I&apos;d still be a little concerned at the potential for matching infinite EOF&apos;s</z><z id="t1699554857" t="Giles Alexander OK. I see what you mean. I’ll have a think about a different way of expressing this"><y>#</y><d>2023-11-09</d><h>18:34</h><r>Giles Alexander</r>OK. I see what you mean. I’ll have a think about a different way of expressing this</z><z id="t1699554905" t="aengelberg It&apos;s possible you don&apos;t need to explicitly match on EOF, because instaparse will only consider a parse valid if it consumes the whole string"><y>#</y><d>2023-11-09</d><h>18:35</h><r>aengelberg</r>It&apos;s possible you don&apos;t need to explicitly match on EOF, because instaparse will only consider a parse valid if it consumes the whole string</z></g></div></body>

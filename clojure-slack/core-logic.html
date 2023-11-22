@@ -97,9 +97,9 @@ y:hover {
 }
 
 
-</style></head><body><style id="css-username">w {min-width: 192px;} r {min-width: 224px;}</style><style id="css-text-filter"></style><style id="css-date-filter"></style><style id="css-filter-override"></style><p id="filters-container"><input id="text-filter" onkeyup="debtextfilter(this.value)" placeholder="filter text" type="string" /><button hidden="hidden" id="date-filter" onclick="cleardatefilter()"></button></p><h2>#core-logic</h2><pre><i>generated UTC: 2023-02-13 19:04</i><i>
-latest data: <a href="https://clojurians-log.clojureverse.org/core-logic/2023-02-07">https://clojurians-log.clojureverse.org/core-logic/2023-02-07</a></i><i>
-messages: 1423</i>
+</style></head><body><style id="css-username">w {min-width: 192px;} r {min-width: 224px;}</style><style id="css-text-filter"></style><style id="css-date-filter"></style><style id="css-filter-override"></style><p id="filters-container"><input id="text-filter" onkeyup="debtextfilter(this.value)" placeholder="filter text" type="string" /><button hidden="hidden" id="date-filter" onclick="cleardatefilter()"></button></p><h2>#core-logic</h2><pre><i>generated UTC: 2023-11-22 19:43</i><i>
+latest data: <a href="https://clojurians-log.clojureverse.org/core-logic/2023-11-14">https://clojurians-log.clojureverse.org/core-logic/2023-11-14</a></i><i>
+messages: 1484</i>
 pro tips:
 * Double click on text to filter by it. (doubleclick + cmd-f for extra points).
 * Click on date to keep day visible regardless of filter.
@@ -2000,4 +2000,276 @@ and then restrict my total sum of choices? That way, in the relation for my choi
 So summarising my questions:
 1. Why does <code>fd/+</code> not take a variable number of arguments out of the box? It seems non-idiomatic from the point of view of Clojure. 
 2. Is the <code>pluso</code> approach sound or problematic at scale? I won&apos;t have that many terms -- maybe a thousand or so, max.
-3. How would a sensei go about formulating this type of constraint?</z></g></div></body>
+3. How would a sensei go about formulating this type of constraint?</z><z id="t1676549408" t="wontheone1 Hi I wonder if there is someone who could help me with this. I have a function that is accumulating something (load) until it doesn&apos;t exceed its limit (capacity). Please help me if you can! It almost works as intended but I get non-unique results. I have tried but failed in writing code that doesn&apos;t produce non-unique results. My function and function call looks like: (defn assign-classes-to-teacher [classes teacher load-sum ?assigned-classes] (fresh [?c ?class ?l ?next-load-sum ?rest-classes ?run-assigned-classes] (conde [(rembero ?class classes ?rest-classes) (featurec teacher {:capacity ?c}) (featurec ?class {:load ?l}) (fd/+ ?l load-sum ?next-load-sum) (fd/&gt;= ?c ?next-load-sum) (conso ?class ?run-assigned-classes ?assigned-classes) (assign-classes-to-teacher ?rest-classes teacher ?next-load-sum ?run-assigned-classes)] [(emptyo classes) (== &apos;() ?assigned-classes)] [(rembero ?class classes ?rest-classes) (assign-classes-to-teacher ?rest-classes teacher load-sum ?assigned-classes)]))) (let [classes [{:id 0 :subject &quot;da&quot; :load 50 :block 1} {:id 1 :subject &quot;da&quot; :load 42 :block 1} {:id 2 :subject &quot;ma&quot; :load 40} {:id 3 :subject &quot;en&quot; :load 30}] teacher {:id 0 :subjects [&quot;da&quot; &quot;en&quot;] :capacity 100}] (run 5 [?assigned-classes] (assign-classes-to-teacher classes teacher 0 ?assigned-classes))) And it returns the following (the first 2 answers are not unique) (({:id 0, :subject &quot;da&quot;, :load 50, :block 1} {:id 1, :subject &quot;da&quot;, :load 42, :block 1}) ({:id 0, :subject &quot;da&quot;, :load 50, :block 1} {:id 1, :subject &quot;da&quot;, :load 42, :block 1}) ({:id 2, :subject &quot;ma&quot;, :load 40} {:id 3, :subject &quot;en&quot;, :load 30}) ({:id 1, :subject &quot;da&quot;, :load 42, :block 1} {:id 3, :subject &quot;en&quot;, :load 30}) ({:id 0, :subject &quot;da&quot;, :load 50, :block 1} {:id 3, :subject &quot;en&quot;, :load 30}))"><y>#</y><d>2023-02-16</d><h>12:10</h><w>wontheone1</w>Hi I wonder if there is someone who could help me with this. I have a function that is accumulating something (load) until it doesn&apos;t exceed its limit (capacity). Please help me if you can!
+
+It almost works as intended but I get <code>non-unique</code> results. I have tried but failed in writing code that doesn&apos;t produce non-unique results. My function and function call looks like:
+
+<pre>(defn assign-classes-to-teacher [classes teacher load-sum ?assigned-classes]
+  (fresh [?c ?class ?l ?next-load-sum ?rest-classes ?run-assigned-classes]
+         (conde
+          [(rembero ?class classes ?rest-classes)
+           (featurec teacher {:capacity ?c})
+           (featurec ?class {:load ?l})
+           (fd/+ ?l load-sum ?next-load-sum)
+           (fd/&gt;= ?c ?next-load-sum)
+           (conso ?class ?run-assigned-classes ?assigned-classes)
+           (assign-classes-to-teacher
+            ?rest-classes teacher ?next-load-sum ?run-assigned-classes)]
+          [(emptyo classes) (== &apos;() ?assigned-classes)]
+          [(rembero ?class classes ?rest-classes)
+           (assign-classes-to-teacher
+            ?rest-classes teacher load-sum ?assigned-classes)])))
+
+(let [classes [{:id 0 :subject &quot;da&quot; :load 50 :block 1}
+               {:id 1 :subject &quot;da&quot; :load 42 :block 1}
+               {:id 2 :subject &quot;ma&quot; :load 40}
+               {:id 3 :subject &quot;en&quot; :load 30}]
+      teacher {:id 0 :subjects [&quot;da&quot; &quot;en&quot;] :capacity 100}]
+  (run 5 [?assigned-classes]
+       (assign-classes-to-teacher classes teacher 0 ?assigned-classes)))</pre>
+And it returns the following (the first 2 answers are not unique)
+<pre>(({:id 0, :subject &quot;da&quot;, :load 50, :block 1} {:id 1, :subject &quot;da&quot;, :load 42, :block 1})
+ ({:id 0, :subject &quot;da&quot;, :load 50, :block 1} {:id 1, :subject &quot;da&quot;, :load 42, :block 1})
+ ({:id 2, :subject &quot;ma&quot;, :load 40} {:id 3, :subject &quot;en&quot;, :load 30})
+ ({:id 1, :subject &quot;da&quot;, :load 42, :block 1} {:id 3, :subject &quot;en&quot;, :load 30})
+ ({:id 0, :subject &quot;da&quot;, :load 50, :block 1} {:id 3, :subject &quot;en&quot;, :load 30}))</pre></z><z id="t1679706232" t="jgertm I&apos;m working on typeclass resolution ala Haskell. I&apos;m using clojure.core.logic.pldb as a store of known instances and am able to resolve both instances for simple types (such as Integer ) and parametric ones (such as Option Integer ). However, I cannot resolve more complicated instances such as Option (Option Integer) . I believe this is because of how I&apos;m modelling the parameter with an lvar (see comment [1]). From reading chapter 10 of https://scholarworks.iu.edu/dspace/bitstream/handle/2022/8777/Byrd_indiana_0093A_10344.pdf , it seems like nominal logic provides a way of dealing with universally quantified statements, but I&apos;m not sure of how to incorporate this into my solution. (ns lang.typeclass2 (:refer-clojure :exclude [type ==]) (:require [clojure.core.logic :refer :all] [clojure.core.logic.pldb :as pldb])) (pldb/db-rel type t) (pldb/db-rel typeclass tc) (pldb/db-rel instance tc t c) (def db (pldb/db [type &apos;String] [type &apos;Integer] [type &apos;Function] [type `(~&apos;Option ~(lvar))] [typeclass &apos;Show] [typeclass &apos;Eq] (let [v (lvar)] [instance &apos;Show `(~&apos;Option ~v) ;; [1] [`(~&apos;Show ~v)]]) (let [v (lvar)] [instance &apos;Eq `(~&apos;Option ~v) [`(~&apos;Eq ~v)]]) [instance &apos;Show &apos;Integer []] [instance &apos;Show &apos;String []] [instance &apos;Eq &apos;Integer []] [instance &apos;Eq &apos;String []])) (declare instanceo) (defne subinstanceso [scs i] ([[[stc st] . mscs] _] (fresh [sih sit] (instanceo stc st sih) (subinstanceso mscs sit) (conso sih sit i))) ([[] _] (== i nil))) (defn instanceo [tc t i] (fresh [scs ih it] (type t) (typeclass tc) (instance tc t scs) (subinstanceso scs it) (== ih [tc t]) (conso ih it i))) (run-db* db [q] (fresh [tc t] (instanceo tc t q))) (run-db* db [q] (instanceo &apos;Show &apos;(Option Integer) q)) ;; =&gt; (([Show (Option Integer)] ([Show Integer]))) (run-db* db [q] (instanceo &apos;Show &apos;(Option (Option Integer)) q)) ;; =&gt; ()"><y>#</y><d>2023-03-25</d><h>01:03</h><w>jgertm</w>I&apos;m working on typeclass resolution ala Haskell. I&apos;m using <code>clojure.core.logic.pldb</code> as a store of known instances and am able to resolve both instances for simple types (such as <code>Integer</code>) and parametric ones (such as <code>Option Integer</code>). However, I cannot resolve more complicated instances such as <code>Option (Option Integer)</code>. I believe this is because of how I&apos;m modelling the parameter with an <code>lvar</code>  (see comment [1]). From reading chapter 10 of <a href="https://scholarworks.iu.edu/dspace/bitstream/handle/2022/8777/Byrd_indiana_0093A_10344.pdf" target="_blank">https://scholarworks.iu.edu/dspace/bitstream/handle/2022/8777/Byrd_indiana_0093A_10344.pdf</a>, it seems like nominal logic provides a way of dealing with universally quantified statements, but I&apos;m not sure of how to incorporate this into my solution.
+<pre>(ns lang.typeclass2
+  (:refer-clojure :exclude [type ==])
+  (:require [clojure.core.logic :refer :all]
+            [clojure.core.logic.pldb :as pldb]))
+
+(pldb/db-rel type t)
+(pldb/db-rel typeclass tc)
+(pldb/db-rel instance tc t c)
+
+(def db
+  (pldb/db
+   [type &apos;String]
+   [type &apos;Integer]
+   [type &apos;Function]
+   [type `(~&apos;Option ~(lvar))]
+
+   [typeclass &apos;Show]
+   [typeclass &apos;Eq]
+
+   (let [v (lvar)]
+     [instance &apos;Show `(~&apos;Option ~v) ;; [1]
+      [`(~&apos;Show ~v)]])
+   (let [v (lvar)]
+     [instance &apos;Eq `(~&apos;Option ~v)
+      [`(~&apos;Eq ~v)]])
+   [instance &apos;Show &apos;Integer []]
+   [instance &apos;Show &apos;String []]
+   [instance &apos;Eq &apos;Integer []]
+   [instance &apos;Eq &apos;String []]))
+
+(declare instanceo)
+
+(defne subinstanceso
+  [scs i]
+  ([[[stc st] . mscs] _]
+   (fresh [sih sit]
+     (instanceo stc st sih)
+     (subinstanceso mscs sit)
+     (conso sih sit i)))
+
+  ([[] _]
+   (== i nil)))
+
+(defn instanceo
+  [tc t i]
+  (fresh [scs ih it]
+    (type t)
+    (typeclass tc)
+    (instance tc t scs)
+    (subinstanceso scs it)
+    (== ih [tc t])
+    (conso ih it i)))
+
+(run-db* db [q] (fresh [tc t] (instanceo tc t q)))
+
+(run-db* db [q] (instanceo &apos;Show &apos;(Option Integer) q))
+;; =&gt; (([Show (Option Integer)] ([Show Integer])))
+
+(run-db* db [q] (instanceo &apos;Show &apos;(Option (Option Integer)) q))
+;; =&gt; ()</pre></z><z id="t1679706278" t="jgertm Also, general advice on how to improve this code is appreciated as well, I suspect I may be reinventing the wheel in subinstanceso"><y>#</y><d>2023-03-25</d><h>01:04</h><r>jgertm</r>Also, general advice on how to improve this code is appreciated as well, I suspect I may be reinventing the wheel in <code>subinstanceso</code></z><z id="t1679711661" t="hiredman The issue here is that you have one lvar as the arg to option, and once that is bound it cannot be bound again, you need it to be a fresh lvar for every check"><y>#</y><d>2023-03-25</d><h>02:34</h><r>hiredman</r>The issue here is that you have one lvar as the arg to option, and once that is bound it cannot be bound again, you need it to be a fresh lvar for every check</z><z id="t1679711950" t="hiredman I don&apos;t know how to structure it off hand, and am away from my repl, but Option isn&apos;t properly a type, it is a type function"><y>#</y><d>2023-03-25</d><h>02:39</h><r>hiredman</r>I don&apos;t know how to structure it off hand, and am away from my repl, but Option isn&apos;t properly a type, it is a type function</z><z id="t1679712642" t="hiredman The way to do it is to have an Option relation that builds an option type (and I guess adds it to the db, never used pldb much, not clear) and then another relation that derives Show for the option"><y>#</y><d>2023-03-25</d><h>02:50</h><r>hiredman</r>The way to do it is to have an Option relation that builds an option type (and I guess adds it to the db, never used pldb much, not clear) and then another relation that derives Show for the option</z><z id="t1679713124" t="hiredman https://github.com/clojure/core.logic/blob/master/src/main/clojure/clojure/core/logic/nominal.clj core.logic does have some kind of nominal extension"><y>#</y><d>2023-03-25</d><h>02:58</h><r>hiredman</r><a href="https://github.com/clojure/core.logic/blob/master/src/main/clojure/clojure/core/logic/nominal.clj" target="_blank">https://github.com/clojure/core.logic/blob/master/src/main/clojure/clojure/core/logic/nominal.clj</a> core.logic does have some kind of nominal extension</z><z id="t1681479284" t="Mateusz Mazurczak Hi, did anyone measured the efficiency of the core.logic library? I&apos;m thinking about implementing job-shop scheduling problem using core.logic lib"><y>#</y><d>2023-04-14</d><h>13:34</h><w>Mateusz Mazurczak</w>Hi, did anyone measured the efficiency of the core.logic library?
+I&apos;m thinking about implementing job-shop scheduling problem using core.logic lib</z><z id="t1682687887" t="Linus Ericsson I haven&apos;t measured, but for scheduling and stuff maybe something like https://github.com/Engelberg/rolling-stones is more efficient?"><y>#</y><d>2023-04-28</d><h>13:18</h><r>Linus Ericsson</r>I haven&apos;t measured, but for scheduling and stuff maybe something like <a href="https://github.com/Engelberg/rolling-stones" target="_blank">https://github.com/Engelberg/rolling-stones</a> is more efficient?</z><z id="t1690272966" t="Ben Sless What exactly is the purpose of the Choice type? I&apos;m trying to map it to the microKanren paper or minikanren implementation, what am I missing?"><y>#</y><d>2023-07-25</d><h>08:16</h><w>Ben Sless</w>What exactly is the purpose of the <code>Choice</code> type?
+I&apos;m trying to map it to the microKanren paper or minikanren implementation, what am I missing?</z><z id="t1690330807" t="paulocuneo not a proper answer but my guess is because clojure cons is not a pair, can&apos;t hold a thunk as tail. also lazyseq uses synchronized methods to unfold, so maybe choice is more light weight. https://github.com/jasonhemann/microKanren/blob/master/microKanren.scm#L45 https://github.com/michaelballantyne/faster-minikanren/blob/master/mk.scm#L287C27-L287C27 https://github.com/clojure/core.logic/blob/master/src/main/clojure/clojure/core/logic.clj#L1092 🙂 I&apos;m fascinated that you could also implement minikanren just with lazy-seq ;; naive implementation, todo remove nils (defn mplus ([g1 g2] (fn [s] (interleave-all (g1 s) (g2 s))))) (defn mbind [g1 &amp; g2] (fn [s] (mapcat g2 (g1 s)))) "><y>#</y><d>2023-07-26</d><h>00:20</h><r>paulocuneo</r>not a proper answer but my guess is because clojure cons is not a pair, can&apos;t hold a thunk as tail.
+
+also lazyseq uses synchronized methods to unfold, so maybe choice is more light weight.
+
+<a href="https://github.com/jasonhemann/microKanren/blob/master/microKanren.scm#L45" target="_blank">https://github.com/jasonhemann/microKanren/blob/master/microKanren.scm#L45</a>
+
+<a href="https://github.com/michaelballantyne/faster-minikanren/blob/master/mk.scm#L287C27-L287C27" target="_blank">https://github.com/michaelballantyne/faster-minikanren/blob/master/mk.scm#L287C27-L287C27</a>
+
+<a href="https://github.com/clojure/core.logic/blob/master/src/main/clojure/clojure/core/logic.clj#L1092" target="_blank">https://github.com/clojure/core.logic/blob/master/src/main/clojure/clojure/core/logic.clj#L1092</a>
+
+<b>🙂</b>
+I&apos;m fascinated that you could also implement minikanren just with lazy-seq
+<pre>;; naive implementation, todo remove nils
+(defn mplus
+  ([g1 g2]
+   (fn [s]
+     (interleave-all (g1 s) (g2 s)))))
+
+(defn mbind [g1 &amp; g2]
+  (fn [s]
+    (mapcat g2 (g1 s))))</pre>
+</z><z id="t1690354024" t="Ben Sless AFAIK the lack of improper lists is the reason for LCons. So what does Choice do?"><y>#</y><d>2023-07-26</d><h>06:47</h><r>Ben Sless</r>AFAIK the lack of improper lists is the reason for LCons.
+So what does Choice do?</z><z id="t1690412333" t="paulocuneo Yes but LCons is on the unification side of things. LCons is for unifying list-ish things. Choice builds a structure for holding the disjunctions of goals(predicates/relations) during the search (ns (:require [clojure.core.logic :refer :all] [clojure.core.logic.protocols :refer [mplus bind]])) (run* [q] (conde [(== q 1)] [(== q 2)] [(== q 3)])) (run* [q] (fn [a] (mplus* (bind a (== q 1)) (bind a (== q 2)) (bind a (== q 3))))) (run* [q] (fn [a] (mplus (bind a (== q 1)) (mplus (bind a (== q 2)) (bind a (== q 3)))))) ;; leaving the interleaving aside (run* [q] (fn [a] (-&gt;Choice ((== q 1) a) (fn [] (-&gt;Choice ((== q 2) a) (fn [] ((== q 3) a))))))) Choice holds a head choice for substitution and a tail of substitution choices."><y>#</y><d>2023-07-26</d><h>22:58</h><r>paulocuneo</r>Yes but LCons is on the unification side of things.  LCons is for unifying list-ish things.
+
+Choice builds a structure for holding the disjunctions of goals(predicates/relations) during the search
+
+<pre>(ns 
+  (:require [clojure.core.logic :refer :all]
+            [clojure.core.logic.protocols :refer [mplus bind]]))
+
+(run* [q]
+  (conde
+   [(== q 1)]
+   [(== q 2)]
+   [(== q 3)]))
+
+(run* [q]
+  (fn [a]
+    (mplus* (bind a (== q 1))
+            (bind a (== q 2))
+            (bind a (== q 3)))))
+
+(run* [q]
+  (fn [a]
+    (mplus (bind a (== q 1))
+           (mplus (bind a (== q 2))
+                  (bind a (== q 3))))))
+
+;; leaving the interleaving aside
+(run* [q]
+  (fn [a]
+    (-&gt;Choice ((== q 1) a)
+              (fn []
+                (-&gt;Choice  ((== q 2) a)
+                           (fn [] ((== q 3) a)))))))</pre>
+Choice holds a head choice for substitution and a tail of substitution choices.</z><z id="t1690412682" t="paulocuneo from Byrd&apos;s dissertation https://scholarworks.iu.edu/dspace/bitstream/handle/2022/8777/Byrd_indiana_0093A_10344.pdf page 51 a choice represents a stream of values. So I think is correct to say that choice is a stream of substitutions. By the way I&apos;m not sure I fully understand the dissertation either, maybe some parts. 😂"><y>#</y><d>2023-07-26</d><h>23:04</h><r>paulocuneo</r>from Byrd&apos;s dissertation <a href="https://scholarworks.iu.edu/dspace/bitstream/handle/2022/8777/Byrd_indiana_0093A_10344.pdf" target="_blank">https://scholarworks.iu.edu/dspace/bitstream/handle/2022/8777/Byrd_indiana_0093A_10344.pdf</a> page 51 a choice represents a stream of values.
+
+So I think is correct to say that choice is a stream of substitutions.
+
+By the way I&apos;m not sure I fully understand the dissertation either, maybe some parts.<b>😂</b></z><z id="t1690432034" t="Ben Sless What&apos;s messing with me is although you&apos;re right I don&apos;t think the rhs of Choice should be a goal"><y>#</y><d>2023-07-27</d><h>04:27</h><r>Ben Sless</r>What&apos;s messing with me is although you&apos;re right I don&apos;t think the rhs of Choice should be a goal</z><z id="t1690432040" t="Ben Sless (extend-type Object IMPlus (mplus [this f] (Choice. this f))) "><y>#</y><d>2023-07-27</d><h>04:27</h><r>Ben Sless</r><pre>(extend-type Object
+  IMPlus
+  (mplus [this f]
+    (Choice. this f)))</pre>
+</z><z id="t1690432075" t="Ben Sless (defn to-stream [aseq] (let [aseq (drop-while nil? aseq)] (when (seq aseq) (choice (first aseq) (fn [] (to-stream (next aseq))))))) "><y>#</y><d>2023-07-27</d><h>04:27</h><r>Ben Sless</r><pre>(defn to-stream [aseq]
+  (let [aseq (drop-while nil? aseq)]
+    (when (seq aseq)
+      (choice (first aseq)
+              (fn [] (to-stream (next aseq)))))))</pre>
+</z><z id="t1690432135" t="Ben Sless It behaves like a lazier lazy seq"><y>#</y><d>2023-07-27</d><h>04:28</h><r>Ben Sless</r>It behaves like a lazier lazy seq</z><z id="t1690432202" t="Ben Sless Maybe [:attrs {:href &quot;/_/_/users/U050B88UR&quot;}] remembers why he wrote it over a decade ago"><y>#</y><d>2023-07-27</d><h>04:30</h><r>Ben Sless</r>Maybe <a>@U050B88UR</a> remembers why he wrote it over a decade ago</z><z id="t1690434388" t="Ben Sless okay I should have referred to the mk dissertation and not uk Looks like choice is just a stream constructor"><y>#</y><d>2023-07-27</d><h>05:06</h><r>Ben Sless</r>okay I should have referred to the mk dissertation and not uk
+Looks like choice is just a stream constructor</z><z id="t1690437252" t="Ben Sless In mk it&apos;s just cons, in core.logic the important bit is implementing take*"><y>#</y><d>2023-07-27</d><h>05:54</h><r>Ben Sless</r>In mk it&apos;s just cons, in core.logic the important bit is implementing <code>take*</code></z><z id="t1690440964" t="hiredman I forget, but uk might not do interleaved search, meaning it does depth first search, where mk and core.logic does bfs"><y>#</y><d>2023-07-27</d><h>06:56</h><r>hiredman</r>I forget, but uk might not do interleaved search, meaning it does depth first search, where mk and core.logic does bfs</z><z id="t1690448033" t="Ben Sless uk does interleave, see how mplus flips streams 1 and 2"><y>#</y><d>2023-07-27</d><h>08:53</h><r>Ben Sless</r>uk does interleave, see how mplus flips streams 1 and 2</z><z id="t1690472726" t="Ben Sless I just got it (I think) Choice is a TAKEN choice, not a possibility to choose. It&apos;s the type for head and rest of stream"><y>#</y><d>2023-07-27</d><h>15:45</h><r>Ben Sless</r>I just got it (I think)
+Choice is a TAKEN choice, not a possibility to choose. It&apos;s the type for head and rest of stream</z><z id="t1690498480" t="paulocuneo yes, agree is a (lazy) stream of substitutions, although the API return substitutions by lazy implementation its holding on to goals that are yet to be executed"><y>#</y><d>2023-07-27</d><h>22:54</h><r>paulocuneo</r>yes, agree is a (lazy) stream of substitutions, although the API return substitutions by lazy implementation its holding on to goals that are yet to be executed</z><z id="t1690787267" t="Ben Sless Choice is what&apos;s returned by msplit"><y>#</y><d>2023-07-31</d><h>07:07</h><r>Ben Sless</r>Choice is what&apos;s returned by msplit</z><z id="t1691887011" t="Patrick Hi, I&apos;m learning core.logic and I think I&apos;m doing something the wrong way. I&apos;m trying to express a very simple language with true, false, if arg1 then arg2 else arg3 as the valid terms and I&apos;m trying to write an evalbooltermo constraint Right now I have this (defn evalbooltermo [t e] (l/conde [(l/== t &apos;true) (l/== e &apos;true)] [(l/== t &apos;false) (l/== e &apos;false)] [(l/fresh [?if ?ifstatement ?predicate ?thenclauses ?thenpath ?then ?true ?elseclauses ?elsepath ?else ?false] ;if P then T else E (l/resto t ?ifstatement) ; P then T else E (l/firsto ?ifstatement ?predicate) ; P (l/resto ?ifstatement ?thenclauses) ; then T else E (l/resto ?thenclauses ?thenpath) ; T else E (l/firsto ?thenpath ?true) ; T (l/resto ?thenpath ?elseclauses) ; else E (l/resto ?elseclauses ?elsepath) ; (E) (l/firsto ?elsepath ?false) ; E (l/fresh [?predval] (evalbooltermo ?predicate ?predval) (l/conde [(l/== ?predval &apos;true) (evalbooltermo ?then e)] [(l/== ?predval &apos;false) (evalbooltermo ?else e)])))])) This code does work, but I just get the feeling that there&apos;s got to be a better way to do this. Can you destructure lists? I also have a booltermo constraint if it would be useful anywhere."><y>#</y><d>2023-08-13</d><h>00:36</h><w>Patrick</w>Hi, I&apos;m learning core.logic and I think I&apos;m doing something the wrong way. I&apos;m trying to express a very simple language with <code>true, false, if arg1 then arg2 else arg3</code> as the valid terms and I&apos;m trying to write an <code>evalbooltermo</code>  constraint Right now I have this
+<pre>(defn evalbooltermo [t e]
+  (l/conde 
+    [(l/== t &apos;true)
+     (l/== e &apos;true)]
+    [(l/== t &apos;false)
+     (l/== e &apos;false)]
+    [(l/fresh [?if ?ifstatement ?predicate ?thenclauses ?thenpath ?then ?true ?elseclauses ?elsepath ?else ?false] ;if P then T else E
+              (l/resto t ?ifstatement) ; P then T else E
+              (l/firsto ?ifstatement ?predicate) ; P
+              (l/resto ?ifstatement ?thenclauses) ; then T else E
+              (l/resto ?thenclauses ?thenpath) ; T else E
+              (l/firsto ?thenpath ?true) ; T
+              (l/resto ?thenpath ?elseclauses) ; else E
+              (l/resto ?elseclauses ?elsepath) ; (E)
+              (l/firsto ?elsepath ?false) ; E
+              (l/fresh [?predval]
+                       (evalbooltermo ?predicate ?predval)
+                       (l/conde
+                         [(l/== ?predval &apos;true)
+                          (evalbooltermo ?then e)]
+                         [(l/== ?predval &apos;false)
+                          (evalbooltermo ?else e)])))]))</pre>
+This code does work, but I just get the feeling that there&apos;s got to be a better way to do this. Can you destructure lists? I also have a <code>booltermo</code> constraint if it would be useful anywhere.</z><z id="t1691958872" t="Patrick Figured it out. For future readers (defn evalbooltermo [t e] (l/conde [(l/== t &apos;true) (l/== e &apos;true)] [(l/== t &apos;false) (l/== e &apos;false)] [(l/fresh [?predicate ?predval ?thenpath ?elsepath] (l/== t `(~&apos;if ~?predicate ~&apos;then ~?thenpath ~&apos;else ~?elsepath)) (l/conde [(l/== ?predval &apos;true) (evalbooltermo ?thenpath e)] [(l/== ?predval &apos;false) (evalbooltermo ?elsepath e)]) (evalbooltermo ?predicate ?predval))])) Is not exactly equivalent, but does the job!"><y>#</y><d>2023-08-13</d><h>20:34</h><r>Patrick</r>Figured it out. For future readers
+<pre>(defn evalbooltermo [t e]
+  (l/conde 
+    [(l/== t &apos;true)
+     (l/== e &apos;true)]
+    [(l/== t &apos;false)
+     (l/== e &apos;false)]
+    [(l/fresh [?predicate ?predval ?thenpath ?elsepath]
+              (l/== t `(~&apos;if ~?predicate ~&apos;then ~?thenpath ~&apos;else ~?elsepath))
+              (l/conde 
+                [(l/== ?predval &apos;true)
+                 (evalbooltermo ?thenpath e)]
+                [(l/== ?predval &apos;false)
+                 (evalbooltermo ?elsepath e)])
+              (evalbooltermo ?predicate ?predval))]))</pre>
+Is not exactly equivalent, but does the job!</z><z id="t1692000220" t="branch14 Trying to wrap my head around core.logic. How can I mix functional and logic programming? (defn squared [x] (* x x)) (run* [x] (membero x [1 2 3]) (fd/&lt; (squared x) 9) (fd/&gt; (squared x) 1)) This does not work (`clojure.core.logic.LVar cannot be cast to java.lang.Number`). Do I have to rewrite my function square into a goal? How would I do that?"><y>#</y><d>2023-08-14</d><h>08:03</h><w>branch14</w>Trying to wrap my head around core.logic. How can I mix functional and logic programming?
+<pre>(defn squared [x]
+    (* x x))
+
+(run* [x]
+    (membero x [1 2 3])
+    (fd/&lt; (squared x) 9)
+    (fd/&gt; (squared x) 1))</pre>
+This does not work (`clojure.core.logic.LVar cannot be cast to java.lang.Number`). Do I have to rewrite my function <code>square</code>into a goal? How would I do that?</z><z id="t1692077864" t="Patrick You would need to turn it into a relation/goal. When turning a function into a relation, the most important step for reasoning about things (at least in my book) is to make the arity -&gt; arity+1. Basically, you are turning the output of the function into one of the inputs of a relation. So for this problem (defn squared [n] (* n n)) Becomes (defn squaredo [n s] (fd/* n n s)) Now to use this in the run* statement, there needs to be a fresh variable. (l/run* [x] (l/membero x [1 2 3]) (l/fresh [sq] (squaredo x sq) (fd/&lt; sq 9) (fd/&gt; sq 1))) So in this case, it makes sq the square of x and sq is just used wherever (squared x) was used in the original example."><y>#</y><d>2023-08-15</d><h>05:37</h><r>Patrick</r>You would need to turn it into a relation/goal. When turning a function into a relation, the most important step for reasoning about things (at least in my book) is to make the arity -&gt; arity+1. Basically, you are turning the output of the function into one of the inputs of a relation. So for this problem
+<pre>(defn squared [n]
+  (* n n))</pre>
+Becomes
+<pre>(defn squaredo [n s]
+  (fd/* n n s))</pre>
+Now to use this in the run* statement, there needs to be a fresh variable.
+<pre>(l/run* [x]
+        (l/membero x [1 2 3])
+        (l/fresh [sq]
+                 (squaredo x sq)
+                 (fd/&lt; sq 9)
+                 (fd/&gt; sq 1)))</pre>
+So in this case, it makes sq the square of x and sq is just used wherever (squared x) was used in the original example.</z><z id="t1692078036" t="Patrick There&apos;s also project but it makes it non relational"><y>#</y><d>2023-08-15</d><h>05:40</h><r>Patrick</r>There&apos;s also <code>project</code> but it makes it non relational</z><z id="t1692109264" t="branch14 Thank you [:attrs {:href &quot;/_/_/users/U049Q8NTLG3&quot;}] , this helped. Is it idiomatic to use featurec to &quot;destructure&quot; values from deeply nested data structures to &quot;store&quot; them in lvars so they can be used in other goals?"><y>#</y><d>2023-08-15</d><h>14:21</h><r>branch14</r>Thank you <a>@U049Q8NTLG3</a>, this helped.
+
+Is it idiomatic to use <code>featurec</code> to &quot;destructure&quot; values from deeply nested data structures to &quot;store&quot; them in lvars so they can be used in other goals?</z><z id="t1692466274" t="Eugene Huang Hello. Was curious if there was a recommended way to tell if a result of run has unbound lvars. For example, the result of (run 1 [q]) will return a list of 1 element with the symbol _0 . Is there an idiomatic way of checking that your result is fully bound? Is there a way to do that when the result might include that symbol in a data structure like a map?"><y>#</y><d>2023-08-19</d><h>17:31</h><w>Eugene Huang</w>Hello. Was curious if there was a recommended way to tell if a result of <code>run</code> has unbound lvars.
+For example, the result of <code>(run 1 [q])</code> will return a list of 1 element with the symbol <code>_0</code> . Is there an idiomatic way of checking that your result is fully bound? Is there a way to do that when the result might include that symbol in a data structure like a map?</z><z id="t1692472664" t="Eugene Huang FYI I settled with this for now ;; Evaluates if input is fully grounded. Returns true if input contains no core.logic symbols like `&apos;_0`. ;; TODO: If built-in core.logic approach is found, replace this. (defn grounded? [x] (not-any? (fn [x] (and (instance? clojure.lang.Symbol x) (boolean (re-matches #&quot;_\d+&quot; (name x))))) (tree-seq coll? seq x)))"><y>#</y><d>2023-08-19</d><h>19:17</h><r>Eugene Huang</r>FYI I settled with this for now
+<pre>;; Evaluates if input is fully grounded. Returns true if input contains no core.logic symbols like `&apos;_0`.
+;; TODO: If built-in core.logic approach is found, replace this.
+(defn grounded? [x]
+  (not-any? (fn [x] (and (instance? clojure.lang.Symbol x)
+                         (boolean (re-matches #&quot;_\d+&quot; (name x)))))
+            (tree-seq coll? seq x)))</pre></z><z id="t1692691195" t="branch14 Is it idiomatic to use featurec to &quot;destructure&quot; values from deeply nested data structures to &quot;store&quot; them in lvars so they can be used in other goals?"><y>#</y><d>2023-08-22</d><h>07:59</h><w>branch14</w>Is it idiomatic to use <code>featurec</code> to &quot;destructure&quot; values from deeply nested data structures to &quot;store&quot; them in lvars so they can be used in other goals?</z><z id="t1692701893" t="Jan K [:attrs {:href &quot;/_/_/users/U170T0Y3H&quot;}] I don&apos;t think there are many well-developed idioms in core.logic programming. In my experience I found it better to avoid maps inside of the core.logic part of my programs, and instead translating to/from relations on the edges, but do whatever works for you."><y>#</y><d>2023-08-22</d><h>10:58</h><w>Jan K</w><a>@branch14</a> I don&apos;t think there are many well-developed idioms in core.logic programming. In my experience I found it better to avoid maps inside of the core.logic part of my programs, and instead translating to/from relations on the edges, but do whatever works for you.</z><z id="t1697770452" t="joshcho Is it recommended to learn prolog before core.logic? I wonder if that will solidify the foundations"><y>#</y><d>2023-10-20</d><h>02:54</h><w>joshcho</w>Is it recommended to learn prolog before core.logic? I wonder if that will solidify the foundations</z><z id="t1697858226" t="joshcho has anyone created maybe an emacs extension that makes the &apos;o&apos; in e.g. membero superscript, like in reasoned schemer? more readable imo"><y>#</y><d>2023-10-21</d><h>03:17</h><w>joshcho</w>has anyone created maybe an emacs extension that makes the &apos;o&apos; in e.g. membero superscript, like in reasoned schemer? more readable imo</z><z id="t1699101773" t="Ben Sless What&apos;s the best way to implement and model integers of unbound size? should I use fd or just just church encode them? I&apos;m building something simple with only lists and numbers. The only numerical operation it should support is increment"><y>#</y><d>2023-11-04</d><h>12:42</h><w>Ben Sless</w>What&apos;s the best way to implement and model integers of unbound size? should I use <code>fd</code> or just just church encode them?
+I&apos;m building something simple with only lists and numbers. The only numerical operation it should support is increment</z><z id="t1699170203" t="Ben Sless can I cheat somehow and model an infinite integer domain?"><y>#</y><d>2023-11-05</d><h>07:43</h><w>Ben Sless</w>can I cheat somehow and model an infinite integer domain?</z><z id="t1699564537" t="Nazral Hello, I see how everyg work, but is there a way to have something like someg that checks whether any goal is true in a coll ?"><y>#</y><d>2023-11-09</d><h>21:15</h><w>Nazral</w>Hello, I see how <code>everyg</code>  work, but is there a way to have something like <code>someg</code>  that checks whether any goal is true in a coll ?</z><z id="t1699564829" t="hiredman yes, let me find it"><y>#</y><d>2023-11-09</d><h>21:20</h><w>hiredman</w>yes, let me find it</z><z id="t1699564916" t="hiredman when you everyg is a conjunction of goals and there is some other functional constructor of disjunctions, the macro constructor for disjunctions is conde"><y>#</y><d>2023-11-09</d><h>21:21</h><w>hiredman</w>when you everyg is a conjunction of goals and there is some other functional constructor of disjunctions, the macro constructor for disjunctions is conde</z><z id="t1699564924" t="hiredman ah or*"><y>#</y><d>2023-11-09</d><h>21:22</h><w>hiredman</w>ah or*</z><z id="t1699564951" t="Nazral ah-ah thanks !"><y>#</y><d>2023-11-09</d><h>21:22</h><w>Nazral</w>ah-ah thanks !</z><z id="t1699564976" t="hiredman ah, sorry, sublte difference in use cases"><y>#</y><d>2023-11-09</d><h>21:22</h><w>hiredman</w>ah, sorry, sublte difference in use cases</z><z id="t1699565000" t="Nazral so instead of (everyg f coll) I can do something like (or* (mapv f coll)) ?"><y>#</y><d>2023-11-09</d><h>21:23</h><w>Nazral</w>so instead of <code>(everyg f coll)</code> I can do something like <code>(or* (mapv f coll))</code> ?</z><z id="t1699565009" t="hiredman and* and or* turn a list of goals into a goal, which is not exactly what everyg does"><y>#</y><d>2023-11-09</d><h>21:23</h><w>hiredman</w>and* and or* turn a list of goals into a goal, which is not exactly what everyg does</z><z id="t1699565046" t="hiredman yeah, I think so"><y>#</y><d>2023-11-09</d><h>21:24</h><w>hiredman</w>yeah, I think so</z><z id="t1699565225" t="Nazral (let [vars [(l/lvar) (l/lvar) (l/lvar)]] (l/run* [q] (l/== q vars) (l/everyg #(fd/in % (fd/domain 1 2 3 4 5 6 7)) vars) (l/or* (mapv #(l/== 7 %) vars)))) seems to work, thank you !"><y>#</y><d>2023-11-09</d><h>21:27</h><w>Nazral</w><pre>(let [vars [(l/lvar) (l/lvar) (l/lvar)]]
+  (l/run* [q]
+    (l/== q vars)
+    (l/everyg #(fd/in % (fd/domain 1 2 3 4 5 6 7)) vars)
+    (l/or* (mapv #(l/== 7 %) vars))))</pre>
+seems to work, thank you !</z><z id="t1699566000" t="Nazral ok, additional question: I want to check that at least n goals be successful in my coll, I&apos;ve succeeded in doing that with project but it seems pretty slow, any better way to do so ?"><y>#</y><d>2023-11-09</d><h>21:40</h><w>Nazral</w>ok, additional question: I want to check that at least n goals be successful in my coll, I&apos;ve succeeded in doing that with <code>project</code>  but it seems pretty slow, any better way to do so ?</z><z id="t1699567168" t="hiredman don&apos;t"><y>#</y><d>2023-11-09</d><h>21:59</h><w>hiredman</w>don&apos;t</z><z id="t1699567292" t="hiredman I think maybe a way to do it would be to take your collection of goals, generate all the n-ary permuations of them, then and* each permuation then or* all of them"><y>#</y><d>2023-11-09</d><h>22:01</h><w>hiredman</w>I think maybe a way to do it would be to take your collection of goals, generate all the n-ary permuations of them, then and* each permuation then or* all of them</z><z id="t1699567352" t="hiredman and if that sounds like a lot, that is in fact what the search tree ends up needing to look like if you want to exhaustively search for all options, which is why the performance is going to be bad"><y>#</y><d>2023-11-09</d><h>22:02</h><w>hiredman</w>and if that sounds like a lot, that is in fact what the search tree ends up needing to look like if you want to exhaustively search for all options, which is why the performance is going to be bad</z><z id="t1699567375" t="hiredman which is why if you can find other way to express what you want it might be better"><y>#</y><d>2023-11-09</d><h>22:02</h><w>hiredman</w>which is why if you can find other way to express what you want it might be better</z><z id="t1699567603" t="Nazral a simplified version of the task at hand: I have a list of goals, and a sliding window over said list of goals, and I want to make sure that in each window (say of length 3), at least 2 goals are valid"><y>#</y><d>2023-11-09</d><h>22:06</h><w>Nazral</w>a simplified version of the task at hand: I have a list of goals, and a sliding window over said list of goals, and I want to make sure that in each window (say of length 3), at least 2 goals are valid</z><z id="t1699714504" t="moe I&apos;m new to core.logic, and I&apos;m working through the http://webyrd.net/alphamk/alphamk.pdf with core.logic.nominal. On page 4, when getting into details about var swapping, an example equivalent to this is given: (l/run* [q] (n/fresh [a b] (l/fresh [x y] (l/== (n/tie a (n/tie a x)) (n/tie a (n/tie b y))) (l/== `(~x ~y) q)))) With the comment that &quot;the unifier cannot apply the swap (a b) to either x or y, since they are both unbound...nominal unification solves this problem by introducing the notion of a suspension&quot;. In c.l.nominal, they var swap / unify the same as if the expressions were identical, neither variable being instantiated."><y>#</y><d>2023-11-11</d><h>14:55</h><w>moe</w>I&apos;m new to core.logic, and I&apos;m working through the <a href="http://webyrd.net/alphamk/alphamk.pdf" target="_blank">http://webyrd.net/alphamk/alphamk.pdf</a> with core.logic.nominal.  On page 4, when getting into details about var swapping, an example equivalent to this is given:
+<pre>(l/run* [q]
+  (n/fresh [a b]
+    (l/fresh [x y]
+      (l/== (n/tie a (n/tie a x)) (n/tie a (n/tie b y)))
+      (l/== `(~x ~y) q))))</pre>
+With the comment that &quot;the unifier cannot apply the swap (a b) to either x or y, since they are both unbound...nominal unification solves this problem by introducing the notion of a suspension&quot;.  In c.l.nominal, they var swap / unify the same as if the expressions were identical, neither variable being instantiated.</z><z id="t1699714812" t="moe Example from the paper"><y>#</y><d>2023-11-11</d><h>15:00</h><r>moe</r>Example from the paper</z><z id="t1699720010" t="moe are the suspensions just being applied?"><y>#</y><d>2023-11-11</d><h>16:26</h><r>moe</r>are the suspensions just being applied?</z><z id="t1699756703" t="sebastibe Hello, Is there a memory performance bottlneck to be aware of when using membero? For example I am trying to find a pattern by day of the month so around 30 variables but when trying to initialize I am getting a OOM error while it it seems to work fine with 4 / 5 variables: (let [vars (repeatedly 30 lvar)] (run 1 [q] (== q vars) (everyg #(membero % [1 2 3 4 5 6 7 8 9]) vars))) Gives a OOM."><y>#</y><d>2023-11-12</d><h>02:38</h><w>sebastibe</w>Hello,
+Is there a memory performance bottlneck to be aware of when using membero?
+For example I am trying to find a pattern by day of the month so around 30 variables but when trying to initialize I am getting a OOM error while it it seems to work fine with 4 / 5 variables:
+<pre>(let [vars (repeatedly 30 lvar)]
+  (run 1 [q]
+    (== q vars)
+    (everyg #(membero % [1 2 3 4 5 6 7 8 9]) vars)))</pre>
+Gives a OOM.</z><z id="t1699946083" t="hifumi123 Is it possible to project on finite domain variables? My use case involves constructing a vector of integers where a certain integer does not appear more than n times. After much digging, I landed on using project like so (defn counto [n coll] (let [fail? (some (fn [[_ count]] (&gt; count n)) (frequencies coll))] (if fail? l/fail l/succeed))) (l/run* [x y z] (l/membero x (range 2)) (l/membero y (range 2)) (l/membero z (range 2)) (l/project [x y z] (counto 2 [x y z]))) However, this means I cant use any finite domain variables. Am I missing something obvious? Ideally, I’d like to be able to do something like this: (l/run* [q] (l/fresh [x y z] (l/== q [x y z]) (fd/in x y z (fd/interval 0 1)) (counto 2 q))) "><y>#</y><d>2023-11-14</d><h>07:14</h><w>hifumi123</w>Is it possible to project on finite domain variables? My use case involves constructing a vector of integers where a certain integer does not appear more than <code>n</code> times. After much digging, I landed on using <code>project</code>  like so
+<pre>(defn counto [n coll]
+  (let [fail? (some (fn [[_ count]]
+                      (&gt; count n))
+                    (frequencies coll))]
+    (if fail?
+      l/fail
+      l/succeed)))
+
+(l/run* [x y z]
+  (l/membero x (range 2))
+  (l/membero y (range 2))
+  (l/membero z (range 2))
+  (l/project [x y z]
+    (counto 2 [x y z])))</pre>
+However, this means I cant use any finite domain variables. Am I missing something obvious? Ideally, I’d like to be able to do something like this:
+<pre>(l/run* [q]
+  (l/fresh [x y z]
+    (l/== q [x y z])
+    (fd/in x y z (fd/interval 0 1))
+    (counto 2 q)))</pre>
+</z></g></div></body>

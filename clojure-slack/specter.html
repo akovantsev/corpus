@@ -97,9 +97,9 @@ y:hover {
 }
 
 
-</style></head><body><style id="css-username">w {min-width: 160px;} r {min-width: 192px;}</style><style id="css-text-filter"></style><style id="css-date-filter"></style><style id="css-filter-override"></style><p id="filters-container"><input id="text-filter" onkeyup="debtextfilter(this.value)" placeholder="filter text" type="string" /><button hidden="hidden" id="date-filter" onclick="cleardatefilter()"></button></p><h2>#specter</h2><pre><i>generated UTC: 2023-02-13 19:05</i><i>
-latest data: <a href="https://clojurians-log.clojureverse.org/specter/2023-02-11">https://clojurians-log.clojureverse.org/specter/2023-02-11</a></i><i>
-messages: 7702</i>
+</style></head><body><style id="css-username">w {min-width: 160px;} r {min-width: 192px;}</style><style id="css-text-filter"></style><style id="css-date-filter"></style><style id="css-filter-override"></style><p id="filters-container"><input id="text-filter" onkeyup="debtextfilter(this.value)" placeholder="filter text" type="string" /><button hidden="hidden" id="date-filter" onclick="cleardatefilter()"></button></p><h2>#specter</h2><pre><i>generated UTC: 2023-11-22 19:43</i><i>
+latest data: <a href="https://clojurians-log.clojureverse.org/specter/2023-11-15">https://clojurians-log.clojureverse.org/specter/2023-11-15</a></i><i>
+messages: 7843</i>
 pro tips:
 * Double click on text to filter by it. (doubleclick + cmd-f for extra points).
 * Click on date to keep day visible regardless of filter.
@@ -8796,4 +8796,495 @@ into a flat data structure like:
                 [:main :parent :child2] &quot;value5&quot;
                 [:main :parent :child3] &quot;value6&quot;
                 [:main :parent :child4] &quot;&quot;}])</pre>
-could this be done using specter?</z><z id="t1676142455" t="nathanmarz [:attrs {:href &quot;/_/_/users/U0U2W7B71&quot;}] yes, you would use recursive-path and collect-one"><y>#</y><d>2023-02-11</d><h>19:07</h><w>nathanmarz</w><a>@nyor.tr</a> yes, you would use <code>recursive-path</code> and <code>collect-one</code></z></g></div></body>
+could this be done using specter?</z><z id="t1676142455" t="nathanmarz [:attrs {:href &quot;/_/_/users/U0U2W7B71&quot;}] yes, you would use recursive-path and collect-one"><y>#</y><d>2023-02-11</d><h>19:07</h><w>nathanmarz</w><a>@nyor.tr</a> yes, you would use <code>recursive-path</code> and <code>collect-one</code></z><z id="t1676997201" t="Carlo I&apos;m doing a specter/select that uses a couple of specter/collect-one , so the general structure of my response is something like: [[collected-val-00 collected-val-01 result-0] [collected-val-10 collected-val-11 result-1] ...] I wonder, could I act on each single vector? Usually I would use a specter/subselect to gather the elements I&apos;m interested in bundling, and a specter/view to finalize the collection, but in this case I can&apos;t get subselect to select each single vector. Ideas?"><y>#</y><d>2023-02-21</d><h>16:33</h><w>Carlo</w>I&apos;m doing a <code>specter/select</code> that uses a couple of <code>specter/collect-one</code>, so the general structure of my response is something like:
+<pre>[[collected-val-00 collected-val-01 result-0]
+ [collected-val-10 collected-val-11 result-1]
+ ...]</pre>
+I wonder, could I act on each single vector? Usually I would use a <code>specter/subselect</code> to gather the elements I&apos;m interested in bundling, and a <code>specter/view</code> to finalize the collection, but in this case I can&apos;t get <code>subselect</code> to select each single vector. Ideas?</z><z id="t1676999336" t="Carlo For now, repurposing an answer by [:attrs {:href &quot;/_/_/users/U173SEFUN&quot;}] in this channel, I&apos;m using: (specter/defrichnav view-with-collected [afn] (specter/select* [this vals structure next-fn] (next-fn [] (afn vals structure))) (specter/transform* [this vals structure next-fn] (next-fn [] (afn vals structure)))) I&apos;m curious to know if there are more ideas, and maybe to lobby for inclusion of this function in the library"><y>#</y><d>2023-02-21</d><h>17:08</h><w>Carlo</w>For now, repurposing an answer by <a>@nathanmarz</a> in this channel, I&apos;m using:
+<pre>(specter/defrichnav view-with-collected [afn]
+  (specter/select* [this vals structure next-fn]
+    (next-fn [] (afn vals structure)))
+  (specter/transform* [this vals structure next-fn]
+    (next-fn [] (afn vals structure))))</pre>
+I&apos;m curious to know if there are more ideas, and maybe to lobby for inclusion of this function in the library</z><z id="t1681477355" t="mmer Hi I have a parsed yaml file and I want to select a tree where the first map entry contains a key of value x and content of y."><y>#</y><d>2023-04-14</d><h>13:02</h><w>mmer</w>Hi I have a parsed yaml file and I want to select a tree where the first map entry contains a key of value x and content of y.</z><z id="t1681491855" t="chromalchemy If your selecting a single node (and the tree is sufficiently nested within that node), you can simply select it like this (select-one [ALL (selected? map? :key (pred= val))] collection) If you need to filter out the other attribues of nested nodes: I don’t have a good intuition of the recursive paths, but it can look something like this: (select (recursive-path [] p (if-path my-predicate? (continue-then-stay :mykeyword ALL p))) collection) That only selects the tree of keyword :mykeyword . You would probably l need to modify the continue path. Docs: https://github.com/redplanetlabs/specter/wiki/Using-Specter-Recursively You can check out some interesting implementations in the navigator collection libraries that have been shared. https://clojars.org/search?q=specter"><y>#</y><d>2023-04-14</d><h>17:04</h><w>chromalchemy</w>If your selecting a single node (and the tree is sufficiently nested within that node), you can simply select it like this
+<pre>(select-one [ALL (selected? map? :key (pred= val))] collection)</pre>
+If you need to filter out the other attribues of nested nodes:
+
+I don’t have a good intuition of the recursive paths, but it can look something like this:
+<pre>(select 
+  (recursive-path [] p
+    (if-path my-predicate?
+       (continue-then-stay :mykeyword ALL p))) 
+  collection)</pre>
+That only selects the tree of keyword <code>:mykeyword </code>. You would probably l need to modify the continue path.
+
+Docs: <a href="https://github.com/redplanetlabs/specter/wiki/Using-Specter-Recursively" target="_blank">https://github.com/redplanetlabs/specter/wiki/Using-Specter-Recursively</a>
+
+You can check out some interesting implementations in the navigator collection libraries that have been shared.
+<a href="https://clojars.org/search?q=specter" target="_blank">https://clojars.org/search?q=specter</a></z><z id="t1681809765" t="h0bbit I’m trying to understand how I would use specter as a replacement for complex select-keys commands. For example, from the following payload: {:fn &quot;get-openai-reply&quot;, :openai-response {:created 1681730312, :choices [{:finish_reason &quot;stop&quot;, :index 0, :message {:role &quot;assistant&quot;, :content &quot;Great! If you have any more questions, feel free to ask.&quot;}}], :usage {:total_tokens 788, :completion_tokens 14, :prompt_tokens 774}, :id &quot;chatcmpl-76HAObDzLQB58BILV05rQvhoCLd3Z&quot;, :object &quot;chat.completion&quot;, :model &quot;gpt-3.5-turbo-0301&quot;}} I want to extract the following output: {:created 1681730312, :usage {:total_tokens 788}} The following command: (s/select-first [:openai-response (s/submap [:created :usage])] data) gives me: {:created 1681730312, :usage {:total_tokens 788, :completion_tokens 14, :prompt_tokens 774}} How do I get the last bit of the selection?"><y>#</y><d>2023-04-18</d><h>09:22</h><w>h0bbit</w>I’m trying to understand how I would use specter as a replacement for complex <code>select-keys</code> commands. For example, from the following payload:
+<pre>{:fn &quot;get-openai-reply&quot;,
+ :openai-response
+ {:created 1681730312,
+  :choices
+  [{:finish_reason &quot;stop&quot;,
+    :index 0,
+    :message
+    {:role &quot;assistant&quot;,
+     :content
+     &quot;Great! If you have any more questions, feel free to ask.&quot;}}],
+  :usage
+  {:total_tokens 788, :completion_tokens 14, :prompt_tokens 774},
+  :id &quot;chatcmpl-76HAObDzLQB58BILV05rQvhoCLd3Z&quot;,
+  :object &quot;chat.completion&quot;,
+  :model &quot;gpt-3.5-turbo-0301&quot;}}</pre>
+I want to extract the following output:
+<pre>{:created 1681730312, :usage {:total_tokens 788}}</pre>
+The following command:
+<pre>(s/select-first [:openai-response (s/submap [:created :usage])] data) </pre>
+gives me:
+<pre>{:created 1681730312, :usage {:total_tokens 788, :completion_tokens 14, :prompt_tokens 774}}</pre>
+How do I get the last bit of the selection?</z><z id="t1681828320" t="rolt you can add (s/tranformed [:usage] #(select-keys % [:total_tokens])) to you path. I&apos;m not sure specter is the right approach"><y>#</y><d>2023-04-18</d><h>14:32</h><r>rolt</r>you can add <code>(s/tranformed [:usage] #(select-keys % [:total_tokens]))</code> to you path. I&apos;m not sure specter is the right approach</z><z id="t1681837873" t="chromalchemy Pretty much the same thing… (select-one [:openai-response (submap [:created :usage]) (view (fn [m] (update m :usage #(select-keys % [:total_tokens]))))])"><y>#</y><d>2023-04-18</d><h>17:11</h><r>chromalchemy</r>Pretty much the same thing…
+<pre>(select-one [:openai-response 
+               (submap [:created :usage])
+               (view
+                 (fn [m] 
+                   (update m :usage
+                     #(select-keys % [:total_tokens]))))])</pre></z><z id="t1681840116" t="chromalchemy Another try (-&gt;&gt; m (select [:openai-response (multi-path (submap [:created]) [(submap [:usage]) (transformed :usage #(select-one (submap [:total_tokens]) %))])]) (apply merge)"><y>#</y><d>2023-04-18</d><h>17:48</h><r>chromalchemy</r>Another try
+<pre>(-&gt;&gt; m
+  (select
+    [:openai-response
+     (multi-path
+       (submap [:created])
+       [(submap [:usage]) 
+        (transformed :usage 
+          #(select-one (submap [:total_tokens]) %))])])
+  (apply merge)</pre></z><z id="t1681840633" t="chromalchemy Probably more clear to transform from the start, instead of expecting to stack a bunch of localized selections in one path. (transform [(collect-one :openai-response :created) (collect-one :openai-response :usage :total_tokens)] (fn [created total m] {:created created :usage {:total_tokens total}}))"><y>#</y><d>2023-04-18</d><h>17:57</h><r>chromalchemy</r>Probably more clear to transform from the start, instead of expecting to stack a bunch of localized selections in one path.
+<pre>(transform 
+    [(collect-one :openai-response :created)
+     (collect-one :openai-response :usage :total_tokens)]
+    (fn [created total m]
+      {:created created
+       :usage {:total_tokens total}}))</pre></z><z id="t1682055304" t="h0bbit hmm.. thanks folks.. I think doing a two step select-keys + dissoc is actually more readable in this case. I wanted to understand the different ways I could use specter, and your answers are fantastic in that regard 😄 🙏"><y>#</y><d>2023-04-21</d><h>05:35</h><r>h0bbit</r>hmm.. thanks folks.. I think doing a two step <code>select-keys + dissoc</code> is actually more readable in this case.
+
+I wanted to understand the different ways I could use specter, and your answers are fantastic in that regard <b>😄</b> <b>🙏</b></z><z id="t1682211641" t="pppaul i just started playing around with specter, and i&apos;m trying to do something like filter a map&apos;s keys by some nested value existing. ;; this code finds the :to-name values, but i want it to act like a filter, keeping keys in the map which have this property (let [templates { :user/company-member-removed {:default-params {:from-subject &quot;Membership Revoked&quot;}, :required-params #{:to-email :to-name}, :type :sendpulse, :variables #{:company_name}, :sendpulse/template-id 12345}, } templates-with-to-names (-&gt;&gt; templates (select [MAP-VALS :required-params ALL (s/pred= :to-name)])) ] templates-with-to-names) i would normally do something like this via (map (juxt key my-filter)) and remove the nil vals then (into {})"><y>#</y><d>2023-04-23</d><h>01:00</h><w>pppaul</w>i just started playing around with specter, and i&apos;m trying to do something like filter a map&apos;s keys by some nested value existing.
+<pre>;; this code finds the :to-name values, but i want it to act like a filter, keeping keys in the map which have this property
+(let [templates               {
+                               :user/company-member-removed {:default-params        {:from-subject &quot;Membership Revoked&quot;},
+                                                             :required-params       #{:to-email :to-name},
+                                                             :type                  :sendpulse,
+                                                             :variables             #{:company_name},
+                                                             :sendpulse/template-id 12345},
+                               }
+      templates-with-to-names (-&gt;&gt; templates
+                                   (select [MAP-VALS :required-params ALL (s/pred= :to-name)]))
+      ]
+  templates-with-to-names)</pre>
+i would normally do something like this via <code>(map (juxt key my-filter))</code> and remove the nil vals then <code>(into {})</code></z><z id="t1682213980" t="pppaul (let [templates { :user/company-member-removed {:default-params {:from-subject &quot;&quot;}, :required-params #{:to-email :to-name}, :type :sendpulse, :variables #{:company_name}, :sendpulse/template-id 54321}, } templates-with-to-names (-&gt;&gt; templates (select [MAP-VALS (selected? [:required-params ALL (pred= :to-name)])])) ] templates-with-to-names) ;;=&gt; ;; [ ;; {:default-params {:from-subject &quot;Email Verification&quot;}, ;; :required-params #{:to-email :to-name}, ;; :type :sendpulse, ;; :variables #{:registration_link}, ;; :sendpulse/template-id 123456} ;; ... ;; ] got to this point, i would like to preserve the map keys, i&apos;m not sure why they got dropped"><y>#</y><d>2023-04-23</d><h>01:39</h><r>pppaul</r><pre>(let [templates               {
+                               :user/company-member-removed {:default-params        {:from-subject &quot;&quot;},
+                                                             :required-params       #{:to-email :to-name},
+                                                             :type                  :sendpulse,
+                                                             :variables             #{:company_name},
+                                                             :sendpulse/template-id 54321},
+                               }
+      templates-with-to-names (-&gt;&gt; templates
+                                   (select [MAP-VALS
+                                            (selected? [:required-params ALL (pred= :to-name)])]))      
+      ]
+  templates-with-to-names)
+;;=&gt;
+;; [
+;;  {:default-params        {:from-subject &quot;Email Verification&quot;},
+;;   :required-params       #{:to-email :to-name},
+;;   :type                  :sendpulse,
+;;   :variables             #{:registration_link},
+;;   :sendpulse/template-id 123456}
+;;  ...
+;;  ]</pre>
+got to this point, i would like to preserve the map keys, i&apos;m not sure why they got dropped</z><z id="t1682215130" t="pppaul templates-with-to-names (-&gt;&gt; templates (transform [ALL (not-selected? [ALL :required-params ALL (pred= :to-name)])] NONE)) i managed to find something that works. any input into if this looks ok or not (am i doing something weird?) is welcome."><y>#</y><d>2023-04-23</d><h>01:58</h><r>pppaul</r><pre>templates-with-to-names (-&gt;&gt; templates
+                                   (transform [ALL (not-selected? [ALL :required-params ALL (pred= :to-name)])]
+                                     NONE))</pre>
+i managed to find something that works. any input into if this looks ok or not (am i doing something weird?) is welcome.</z><z id="t1682398565" t="cheewah am new to specter as well and your use of transform to &apos;remove&apos; unwanted entries is an interesting one, definitely something to add to my specter toolkit if there isn&apos;t a more idiomatic way. meanwhile i play around a little and found the following no transform version gets pretty close (select [ALL (selected? [LAST :required-params ALL (pred= :to-name)])] template) but the output is vector instead of map"><y>#</y><d>2023-04-25</d><h>04:56</h><r>cheewah</r>am new to specter as well and your use of transform to &apos;remove&apos; unwanted entries is an interesting one, definitely something to add to my specter toolkit if there isn&apos;t a more idiomatic way. meanwhile i play around a little and found the following no transform version gets pretty close
+<pre>(select [ALL (selected? [LAST :required-params ALL (pred= :to-name)])] template)</pre>
+but the output is vector instead of map</z><z id="t1682750162" t="cheewah if i need to setval at nth position counted from back, any suggestion how to do it? i.e. something like (setval [(before-index -2)] :x [1 2 3 4 5 6 7]) ; [1 2 3 4 5 :x 6 7] which of course doesn&apos;t work because -2 (negative) index isn&apos;t interpreted as count from back. do i need to create a new navigator or is there a way to compose something out of existing ones?"><y>#</y><d>2023-04-29</d><h>06:36</h><w>cheewah</w>if i need to setval at nth position counted from back, any suggestion how to do it?
+i.e.  something like
+<pre>(setval [(before-index -2)] :x [1 2 3 4 5 6 7])
+; [1 2 3 4 5 :x 6 7]</pre>
+which of course doesn&apos;t work because <code>-2</code> (negative) index isn&apos;t interpreted as count from back. do i need to create a new navigator or is there a way to compose something out of existing ones?</z><z id="t1682817677" t="nathanmarz [:attrs {:href &quot;/_/_/users/U02SMNATXCY&quot;}] I would do that as a new navigator"><y>#</y><d>2023-04-30</d><h>01:21</h><w>nathanmarz</w><a>@cheewah.seetoh</a> I would do that as a new navigator</z><z id="t1682855843" t="cheewah thanks for the confirmation"><y>#</y><d>2023-04-30</d><h>11:57</h><r>cheewah</r>thanks for the confirmation</z><z id="t1682963310" t="pppaul i&apos;m having a lot of trouble getting a hang of how to use specter. i feel like the documentation is meant for people who already have a good understanding of how to use the library. anyone have recommendations for how to go about learning this tool?"><y>#</y><d>2023-05-01</d><h>17:48</h><w>pppaul</w>i&apos;m having a lot of trouble getting a hang of how to use specter. i feel like the documentation is meant for people who already have a good understanding of how to use the library. anyone have recommendations for how to go about learning this tool?</z><z id="t1682980834" t="nathanmarz [:attrs {:href &quot;/_/_/users/U0LAJQLQ1&quot;}] this screencast may be helpful https://www.youtube.com/watch?v=rh5J4vacG98"><y>#</y><d>2023-05-01</d><h>22:40</h><w>nathanmarz</w><a>@pppaul</a> this screencast may be helpful <a href="https://www.youtube.com/watch?v=rh5J4vacG98" target="_blank">https://www.youtube.com/watch?v=rh5J4vacG98</a></z><z id="t1682981159" t="pppaul i saw that screencast (why i started using specter again). it&apos;s pretty good, but i feel like i need more examples. i keep stumbling at seemingly simple selects/transforms. the only thing i feel confident in using is the walker"><y>#</y><d>2023-05-01</d><h>22:45</h><w>pppaul</w>i saw that screencast (why i started using specter again). it&apos;s pretty good, but i feel like i need more examples. i keep stumbling at seemingly simple selects/transforms. the only thing i feel confident in using is the walker</z><z id="t1682981335" t="nathanmarz I&apos;m not aware of any other tutorials besides what&apos;s listed in the README"><y>#</y><d>2023-05-01</d><h>22:48</h><w>nathanmarz</w>I&apos;m not aware of any other tutorials besides what&apos;s listed in the README</z><z id="t1682981341" t="nathanmarz feel free to ask more specific questions here"><y>#</y><d>2023-05-01</d><h>22:49</h><w>nathanmarz</w>feel free to ask more specific questions here</z><z id="t1683200970" t="sh54 Is there any way to edit multiple bits of a zipper in one transform? If I do something like the following I get a stack overflow 😕 : (let [s [:a [:b [1 2 3]] [:c 3 4 5]]] (S/transform [SZ/VECTOR-ZIP SZ/NEXT-WALK #(= 3 (zip/node %)) SZ/NODE] (constantly [:z 1 2 3]) s)) Obviously there are plenty of ways to do this without zippers but this is the simplest thing I can get to blow up. If I change (constantly [:z 1 2 3]) to (constantly [:z 1 2]) then it all works fine. My intuition would be that it finds everything in the path then applies the transform to things. But it looks like it keeps expanding the 3&apos;s until the stack gets blown."><y>#</y><d>2023-05-04</d><h>11:49</h><w>sh54</w>Is there any way to edit multiple bits of a zipper in one transform?
+If I do something like the following I get a stack overflow <b>😕</b>:
+<pre>(let [s [:a [:b [1 2 3]] [:c 3 4 5]]]
+    (S/transform [SZ/VECTOR-ZIP
+                  SZ/NEXT-WALK
+                  #(= 3 (zip/node %))
+                  SZ/NODE]
+                 (constantly [:z 1 2 3])
+                 s))</pre>
+Obviously there are plenty of ways to do this without zippers but this is the simplest thing I can get to blow up.
+
+If I change <code>(constantly [:z 1 2 3])</code> to <code>(constantly [:z 1 2])</code> then it all works fine.
+
+My intuition would be that it finds everything in the path then applies the transform to things. But it looks like it keeps expanding the 3&apos;s until the stack gets blown.</z><z id="t1683201767" t="sh54 The following seems to solve this specific problem. I will see if it solved my actual problem. (def BEFORE-END (S/recursive-path [] p (S/if-path #(zip/end? (zip/next %)) S/STAY [SZ/NEXT p]))) (S/declarepath ^{:doc &quot;Navigate to every element reachable using calls to PREV&quot;} PREV-WALK) (S/providepath PREV-WALK (S/stay-then-continue SZ/PREV PREV-WALK)) (let [s [:a [:b [1 2 3]] [:c 3 4 5]]] (S/transform [SZ/VECTOR-ZIP BEFORE-END PREV-WALK #(= 3 (zip/node %)) SZ/NODE] (constantly [:z 1 2 3]) s))"><y>#</y><d>2023-05-04</d><h>12:02</h><r>sh54</r>The following seems to solve this specific problem. I will see if it solved my actual problem.
+
+<pre>(def BEFORE-END
+  (S/recursive-path [] p
+                  (S/if-path #(zip/end? (zip/next %))
+                             S/STAY
+                             [SZ/NEXT p])))
+
+(S/declarepath ^{:doc &quot;Navigate to every element reachable using calls
+                     to PREV&quot;}
+             PREV-WALK)
+
+(S/providepath PREV-WALK
+             (S/stay-then-continue
+              SZ/PREV
+              PREV-WALK))
+
+(let [s [:a [:b [1 2 3]] [:c 3 4 5]]]
+    (S/transform [SZ/VECTOR-ZIP
+                  BEFORE-END
+                  PREV-WALK
+                  #(= 3 (zip/node %))
+                  SZ/NODE]
+                 (constantly [:z 1 2 3])
+                 s))</pre></z><z id="t1683271156" t="joshcho I am looking for the dual of setval and NONE usage. I have (setval [MAP-VALS #(not (&lt; 0 %))] NONE {:a 1 :b -1 :c 3}) The not and the NONE are clunky, and it&apos;d be nice if there was a way to select only on those, but also keep the rest of the structure."><y>#</y><d>2023-05-05</d><h>07:19</h><w>joshcho</w>I am looking for the dual of setval and NONE usage. I have
+<pre>(setval [MAP-VALS #(not (&lt; 0 %))] NONE {:a 1 :b -1 :c 3})</pre>
+The not and the NONE are clunky, and it&apos;d be nice if there was a way to select only on those, but also keep the rest of the structure.</z><z id="t1683317383" t="nathanmarz This is a nicer way to write that: (setval [MAP-VALS (pred&lt; 0)] NONE {:a 1 :b -1 :c 3})"><y>#</y><d>2023-05-05</d><h>20:09</h><w>nathanmarz</w>This is a nicer way to write that: <code>(setval [MAP-VALS (pred&lt; 0)] NONE {:a 1 :b -1 :c 3})</code></z><z id="t1683371302" t="sh54 Given some hiccup like structure I want to find all things with a tag and a &quot;particular&quot; path to get to the thing. I have a solution but I am not too keen its use of collected. (require &apos;[com.rpl.specter :as S]) (require &apos;[com.rpl.specter.impl :as i]) (require &apos;[com.rpl.specter.util-macros :as sum]) (defn tag? [tag-name] #(and (vector? %) (= tag-name (first %)))) ;; Based on INDEXED-VALS (S/defnav INDEXED-HEADLINES [] (select* [this structure next-fn] ;; could be more efficient with a primitive mutable field (let [ih (i/mutable-cell -1) io (i/mutable-cell -1)] (sum/doseqres S/NONE [e structure] (let [cell (if ((tag? :headline) e) ih io)] (i/update-cell! cell inc) (next-fn [(i/get-cell cell) e]))))) ;; TODO: update this like the select*. Outside of scope (transform* [this structure next-fn] (throw (ex-info &quot;not implemented&quot; {})))) ;; Based on code from (def headline-path-walker (S/recursive-path [] p (S/if-path sequential? [INDEXED-HEADLINES (S/if-path [S/LAST (tag? :headline)] (S/multi-path [(S/collect-one S/FIRST) S/LAST] [(S/collect-one S/FIRST) S/LAST p]) [(S/collect-one S/FIRST) S/LAST p])]))) So evaluating (let [s [:doc [:ignore-this] [:headline [:title [:text [:text-normal &quot;headline&quot;]]] [:section] [:headline [:title [:text [:text-normal &quot;child&quot;]]] [:section] [:headline [:title [:text [:text-normal &quot;grandchild&quot;]]] [:section]] [:headline [:title [:text [:text-normal &quot;grandchild2&quot;]]] [:section]]]] [:headline [:title [:text [:text-normal &quot;other headline&quot;]]] [:section]]]] (S/select [headline-path-walker (S/nthpath 1)] s)) Results in [[0 [:title [:text [:text-normal &quot;headline&quot;]]]] [0 0 [:title [:text [:text-normal &quot;child&quot;]]]] [0 0 0 [:title [:text [:text-normal &quot;grandchild&quot;]]]] [0 0 1 [:title [:text [:text-normal &quot;grandchild2&quot;]]]] [1 [:title [:text [:text-normal &quot;other headline&quot;]]]]] One issue I have is that headline-path-walker results in stuff getting added to collected. I would prefer if it used collect internally but returned a collection of [[0 1 2 ...] [:headline ...]] . Is there any way to do this? I have played around with S/transformed but to no avail."><y>#</y><d>2023-05-06</d><h>11:08</h><w>sh54</w>Given some hiccup like structure I want to find all things with a tag and a &quot;particular&quot; path to get to the thing. I have a solution but I am not too keen its use of collected.
+
+<pre>(require &apos;[com.rpl.specter :as S])
+(require &apos;[com.rpl.specter.impl :as i])
+(require &apos;[com.rpl.specter.util-macros :as sum])
+
+(defn tag?
+  [tag-name]
+  #(and (vector? %) (= tag-name (first %))))
+
+;; Based on INDEXED-VALS
+(S/defnav
+  INDEXED-HEADLINES
+  []
+  (select* [this structure next-fn]
+           ;; could be more efficient with a primitive mutable field
+           (let [ih (i/mutable-cell -1)
+                 io (i/mutable-cell -1)]
+             (sum/doseqres S/NONE [e structure]
+                           (let [cell (if ((tag? :headline) e) ih io)]
+                             (i/update-cell! cell inc)
+                             (next-fn [(i/get-cell cell) e])))))
+  ;; TODO: update this like the select*. Outside of scope
+  (transform* [this structure next-fn]
+              (throw (ex-info &quot;not implemented&quot; {}))))
+
+;; Based on code from 
+(def headline-path-walker
+  (S/recursive-path [] p
+    (S/if-path sequential?
+      [INDEXED-HEADLINES
+       (S/if-path [S/LAST (tag? :headline)]
+         (S/multi-path
+          [(S/collect-one S/FIRST)
+           S/LAST]
+          [(S/collect-one S/FIRST)
+           S/LAST
+           p])
+         [(S/collect-one S/FIRST) S/LAST p])])))</pre>
+So evaluating
+<pre>(let [s [:doc
+         [:ignore-this]
+         [:headline
+          [:title [:text [:text-normal &quot;headline&quot;]]]
+          [:section]
+          [:headline
+           [:title [:text [:text-normal &quot;child&quot;]]]
+           [:section]
+           [:headline
+            [:title [:text [:text-normal &quot;grandchild&quot;]]]
+            [:section]]
+           [:headline
+            [:title [:text [:text-normal &quot;grandchild2&quot;]]]
+            [:section]]]]
+         [:headline
+          [:title [:text [:text-normal &quot;other headline&quot;]]]
+          [:section]]]]
+  (S/select [headline-path-walker
+             (S/nthpath 1)]
+            s))</pre>
+Results in
+<pre>[[0 [:title [:text [:text-normal &quot;headline&quot;]]]]
+ [0 0 [:title [:text [:text-normal &quot;child&quot;]]]]
+ [0 0 0 [:title [:text [:text-normal &quot;grandchild&quot;]]]]
+ [0 0 1 [:title [:text [:text-normal &quot;grandchild2&quot;]]]]
+ [1 [:title [:text [:text-normal &quot;other headline&quot;]]]]]</pre>
+One issue I have is that <code>headline-path-walker</code> results in stuff getting added to collected. I would prefer if it used collect internally but returned a collection of <code>[[0 1 2 ...] [:headline ...]]</code>. Is there any way to do this? I have played around with <code>S/transformed</code> but to no avail.</z><z id="t1683740310" t="pppaul it&apos;s been hard for me to come up with problems that i want to solve with specter, but i have one now. i have parts of my data-structure where i have meta data on a list/vector, i want to merge/transform each item in the list with that meta data. i typically do this sort of thing with walks and core.match, but i would like to see how this looks like in specter. ;; input { :example-meta ^{:custom/template &quot;example/file/path.file&quot;} [ {:summary &quot;all fields filled in&quot;} {:summary &quot;missing single-file uploads&quot;} ] } ;; output =&gt; { :example-meta [ {:summary &quot;all fields filled in&quot; :custom/template &quot;example/file/path.file&quot;} {:summary &quot;missing single-file uploads&quot;} :custom/template &quot;example/file/path.file&quot; ] } so, i think i know how to do this with a nested transformation, but i&apos;m wondering if this can be done with a single transformation. can a single transformation detect the key i care about in meta, then operate on the structure the meta-data is attached to?"><y>#</y><d>2023-05-10</d><h>17:38</h><w>pppaul</w>it&apos;s been hard for me to come up with problems that i want to solve with specter, but i have one now. i have parts of my data-structure where i have meta data on a list/vector, i want to merge/transform each item in the list with that meta data. i typically do this sort of thing with walks and core.match, but i would like to see how this looks like in specter.
+
+
+<pre>;; input
+{
+ :example-meta
+ ^{:custom/template &quot;example/file/path.file&quot;}
+ [
+  {:summary              &quot;all fields filled in&quot;}
+  {:summary              &quot;missing single-file uploads&quot;}  
+  ]
+ }
+
+;; output =&gt;
+{
+ :example-meta 
+ [
+  {:summary         &quot;all fields filled in&quot;
+   :custom/template &quot;example/file/path.file&quot;}
+  {:summary &quot;missing single-file uploads&quot;} 
+  :custom/template &quot;example/file/path.file&quot; 
+  ]
+ }</pre>
+so, i think i know how to do this with a nested transformation, but i&apos;m wondering if this can be done with a single transformation. can a single transformation detect the key i care about in meta, then operate on the structure the meta-data is attached to?</z><z id="t1683744109" t="pppaul (transform [MAP-VALS (view (juxt (comp #(select-keys % [:custom/template]) meta) identity)) (pred first)] (fn [[meta resources]] (-&gt;&gt; resources (transform ALL (partial merge-with str meta))) )) i came up with this, i tried experimenting with a lot of specter functions, including multi-path i found view to be very useful, and multi-path does almost what i want (which is something like juxt ). i expect there is a much better way to do this. (comp select-keys... seems like it&apos;s redundant with other specter functions"><y>#</y><d>2023-05-10</d><h>18:41</h><r>pppaul</r><pre>(transform [MAP-VALS
+              (view (juxt (comp #(select-keys % [:custom/template]) meta) identity))
+              (pred first)]
+             (fn [[meta resources]]
+               (-&gt;&gt; resources
+                    (transform ALL (partial merge-with str meta)))
+))</pre>
+i came up with this, i tried experimenting with a lot of specter functions, including <code>multi-path</code> i found <code>view</code> to be very useful, and <code>multi-path</code> does almost what i want (which is something like <code>juxt</code>).  i expect there is a much better way to do this. <code>(comp select-keys...</code> seems like it&apos;s redundant with other specter functions</z><z id="t1683744171" t="pppaul (merge-with str ... is intentional, meta data in this case would be assumed to be a prefix"><y>#</y><d>2023-05-10</d><h>18:42</h><r>pppaul</r><code>(merge-with str ...</code> is intentional, meta data in this case would be assumed to be a prefix</z><z id="t1683792679" t="rolt you can use collect"><y>#</y><d>2023-05-11</d><h>08:11</h><r>rolt</r>you can use collect</z><z id="t1683792756" t="rolt (transform [:example-meta (collect-one META #(select-keys % [:custom/template])) ALL] (fn [meta resources] (merge-with str meta resources)) data)"><y>#</y><d>2023-05-11</d><h>08:12</h><r>rolt</r><pre>(transform [:example-meta
+               (collect-one META #(select-keys % [:custom/template]))
+               ALL]
+              (fn [meta resources] (merge-with str meta resources))
+              data)</pre></z><z id="t1683792970" t="rolt or even: (transform [:example-meta (collect-one META (submap [:custom/template])) ALL] (fn [meta resources] (merge-with str meta resources)) data)"><y>#</y><d>2023-05-11</d><h>08:16</h><r>rolt</r>or even:
+<pre>(transform [:example-meta
+               (collect-one META (submap [:custom/template]))
+               ALL]
+              (fn [meta resources] (merge-with str meta resources))
+              data)</pre></z><z id="t1683824620" t="pppaul thanks, I&apos;ll try these out"><y>#</y><d>2023-05-11</d><h>17:03</h><r>pppaul</r>thanks, I&apos;ll try these out</z><z id="t1684545486" t="steveb8n Q: is there a way to do this transform as a single select-first? (-&gt;&gt; {:sports {:tennis {:goat &quot;Roger&quot; :hot &quot;Carlos&quot;} :football {:goat &quot;Lionel&quot;}} :music {:guitar {:goat &quot;Tommy&quot;}}} (select-first (submap [:sports])) (transform :sports #(select-keys % [:tennis])) (transform [:sports :tennis] #(select-keys % [:hot]))) =&gt; {:sports {:tennis {:hot &quot;Carlos&quot;}}}"><y>#</y><d>2023-05-20</d><h>01:18</h><w>steveb8n</w>Q: is there a way to do this transform as a single select-first?
+<pre>(-&gt;&gt; {:sports {:tennis   {:goat &quot;Roger&quot;
+                          :hot &quot;Carlos&quot;}
+               :football {:goat &quot;Lionel&quot;}}
+      :music  {:guitar {:goat &quot;Tommy&quot;}}}
+     (select-first (submap [:sports]))
+     (transform :sports #(select-keys % [:tennis]))
+     (transform [:sports :tennis] #(select-keys % [:hot])))
+=&gt; {:sports {:tennis {:hot &quot;Carlos&quot;}}}</pre></z><z id="t1684680594" t="itai edri how can i navigate into nested (recursively) data structure and transform the number values? {:rows [{:rows 2}, {:rows [{:rows 3}]}]} into {:rows [{:rows &quot;2%&quot;}, {:rows [{:rows &quot;3%&quot;}]}]} "><y>#</y><d>2023-05-21</d><h>14:49</h><w>itai edri</w>how can i navigate into nested (recursively) data structure and transform the <code>number</code> values?
+<pre>{:rows [{:rows 2}, {:rows [{:rows 3}]}]}</pre>
+into
+<pre>{:rows [{:rows &quot;2%&quot;}, {:rows [{:rows &quot;3%&quot;}]}]}</pre>
+</z><z id="t1684730673" t="steveb8n you’ll find the answer here https://github.com/redplanetlabs/specter/wiki/Using-Specter-Recursively"><y>#</y><d>2023-05-22</d><h>04:44</h><r>steveb8n</r>you’ll find the answer here <a href="https://github.com/redplanetlabs/specter/wiki/Using-Specter-Recursively" target="_blank">https://github.com/redplanetlabs/specter/wiki/Using-Specter-Recursively</a></z><z id="t1684747754" t="itai edri How can I collect the depth of a nested vector? For example (def TABLE (recursive-path [] p [(cond-path vector? (sp/stay-then-continue ALL p) map? [(submap [:rows :columns]) MAP-VALS (pred vector?) [ALL p]])])) (select TABLE {:rows [[1 [2]]]} results in [[1 [2]] [2]] . I would like to send to the transformation function the depth of each element (for example, [1 [2]] depth is 2, and [1] depth is 3."><y>#</y><d>2023-05-22</d><h>09:29</h><w>itai edri</w>How can I collect the depth of a nested vector?
+For example
+<pre>(def TABLE
+  (recursive-path
+   [] p
+   [(cond-path
+     vector? (sp/stay-then-continue ALL p)
+     map? [(submap [:rows :columns])
+           MAP-VALS
+           (pred vector?)
+           [ALL p]])]))</pre>
+<code>(select TABLE {:rows [[1 [2]]]}</code> results in <code>[[1 [2]] [2]]</code> .
+I would like to send to the transformation function the depth of each element (for example, <code>[1 [2]]</code> depth is 2, and <code>[1]</code> depth is 3.</z><z id="t1684777363" t="nathanmarz that&apos;s possible with collect-one or VAL"><y>#</y><d>2023-05-22</d><h>17:42</h><w>nathanmarz</w>that&apos;s possible with <code>collect-one</code> or <code>VAL</code></z><z id="t1685276211" t="itai edri Hi all, I want to accumulate a computation over a vector of maps and set its result to the map. For example: {:vals [{:v 1} {:v 10} {:v 100} {:v 1000}]} And assume the computation is :v divide by the total sum plus the previous computed result should be: {:vals [{:v 1 :k (/ 1 1111)} {:v 10 :k (/ 11 1111)} {:v 100 :k (/ 111 1111)} {:v 1000 :k (/ 1111 1111)}]} I&apos;m looking for an alternative to https://ramdajs.com/docs/#mapAccum"><y>#</y><d>2023-05-28</d><h>12:16</h><w>itai edri</w>Hi all,
+I want to accumulate a computation over a vector of maps and set its result to the map.
+For example:
+<pre>{:vals [{:v 1} {:v 10} {:v 100} {:v 1000}]}</pre>
+And assume the computation is <code>:v</code> divide by the total sum plus the previous computed
+result should be:
+<pre>{:vals [{:v 1 :k (/ 1 1111)} {:v 10 :k (/ 11 1111)} {:v 100 :k (/ 111 1111)} {:v 1000 :k (/ 1111 1111)}]}</pre>
+I&apos;m looking for an alternative to <a href="https://ramdajs.com/docs/#mapAccum" target="_blank">https://ramdajs.com/docs/#mapAccum</a></z><z id="t1686235079" t="rolt clojure&apos;s macAccum is reductions"><y>#</y><d>2023-06-08</d><h>14:37</h><r>rolt</r>clojure&apos;s macAccum is reductions</z><z id="t1686235089" t="rolt https://clojuredocs.org/clojure.core/reductions"><y>#</y><d>2023-06-08</d><h>14:38</h><r>rolt</r><a href="https://clojuredocs.org/clojure.core/reductions" target="_blank">https://clojuredocs.org/clojure.core/reductions</a></z><z id="t1685387860" t="nathanmarz [:attrs {:href &quot;/_/_/users/U057T406Y15&quot;}] that&apos;s just this: (let [sum (reduce + (traverse [:vals ALL :v] data))] (transform [:vals ALL (collect-one :v) :k] (fn [v _] (/ v sum)) data))"><y>#</y><d>2023-05-29</d><h>19:17</h><w>nathanmarz</w><a>@itai</a> that&apos;s just this:
+<pre>(let [sum (reduce + (traverse [:vals ALL :v] data))]
+  (transform [:vals ALL (collect-one :v) :k] (fn [v _] (/ v sum)) data))</pre></z><z id="t1685435770" t="itai edri Thanks for you response, but please note that the computation of :k i based on the current :v and the sum of all previous :v &apos;s. In your example, the result is: {:vals [{:v 1 :k (/ 1 1111)} {:v 10 :k (/ 10 1111)} {:v 100 :k (/ 100 1111)} {:v 1000 :k (/ 1000 1111)}]}"><y>#</y><d>2023-05-30</d><h>08:36</h><r>itai edri</r>Thanks for you response, but please note that the computation of <code>:k</code> i based on the current <code>:v</code> and the sum of all previous <code>:v</code> &apos;s.
+In your example, the result is:
+<pre>{:vals [{:v 1 :k (/ 1 1111)} {:v 10 :k (/ 10 1111)} {:v 100 :k (/ 100 1111)} {:v 1000 :k (/ 1000 1111)}]}</pre></z><z id="t1685474166" t="nathanmarz ah I see"><y>#</y><d>2023-05-30</d><h>19:16</h><r>nathanmarz</r>ah I see</z><z id="t1685474200" t="nathanmarz it&apos;s doable with zipper navigators and a recursive-path but it&apos;s probably easier just to do a reduce of some sort"><y>#</y><d>2023-05-30</d><h>19:16</h><r>nathanmarz</r>it&apos;s doable with zipper navigators and a recursive-path but it&apos;s probably easier just to do a <code>reduce</code> of some sort</z><z id="t1685517398" t="itai edri I just implemented mapAccum (defn map-accum [f init-coll coll] (loop [acc init-coll result [] remaining-coll coll] (if (empty? remaining-coll) result (let [[new-acc new-elem] (f acc (first remaining-coll))] (recur new-acc (conj result new-elem) (rest remaining-coll))))))"><y>#</y><d>2023-05-31</d><h>07:16</h><r>itai edri</r>I just implemented <code>mapAccum</code>
+<pre>(defn map-accum [f init-coll coll]
+  (loop [acc init-coll
+         result []
+         remaining-coll coll]
+    (if (empty? remaining-coll)
+      result
+      (let [[new-acc new-elem] (f acc (first remaining-coll))]
+        (recur new-acc (conj result new-elem) (rest remaining-coll))))))</pre></z><z id="t1686939221" t="caleb.macdonaldblack Unless I’m mistaken, Specter seems to lack support for working with map-entries. I’m curious as to why this is? For example: (into {} (remove (comp string? key)) {:x 1 &quot;y&quot; 2 &apos;z 3}) It doesn’t seem to be straight forward to achieve something like that in Specter. Perhaps: 1. There is a simple solution I’m not aware of, or 2. It’s easy enough with just core libs so Specter isn’t needed, or 3. Some trade-off exists that makes it non-viable to support this, or 4. There is an alternative, and perhaps better ,approach to achieving the same thing, or 5. What I’m trying to do could be considered an anti-pattern a. For example: (let [pred (partial = 10)] (first (filter pred (range 20)))) ;; Typically used for find-by-id on sequences. However a lookup on a map is preferred. 6. or, It’s easy enough to extend Specter to support this, or 7. Something else I haven’t considered"><y>#</y><d>2023-06-16</d><h>18:13</h><w>caleb.macdonaldblack</w>Unless I’m mistaken, Specter seems to lack support for working with map-entries.
+
+I’m curious as to why this is?
+
+For example:
+<pre>(into {}
+      (remove (comp string? key))
+      {:x  1
+       &quot;y&quot; 2
+       &apos;z  3})</pre>
+It doesn’t seem to be straight forward to achieve something like that in Specter.
+
+Perhaps:
+1. There is a simple solution I’m not aware of, or
+2. It’s easy enough with just core libs so Specter isn’t needed, or
+3. Some trade-off exists that makes it non-viable to support this, or
+4. There is an alternative, and perhaps better ,approach to achieving the same thing, or
+5. What I’m trying to do could be considered an anti-pattern
+    a. For example:
+<pre>(let [pred (partial = 10)]
+  (first (filter pred (range 20))))
+;; Typically used for find-by-id on sequences. However a lookup on a map is preferred.</pre>
+6. or, It’s easy enough to extend Specter to support this, or
+7. Something else I haven’t considered</z><z id="t1686939874" t="phronmophobic I&apos;m not sure what you tried that didn&apos;t work, but the following seems to work for me: (specter/setval [specter/ALL (comp string? first)] specter/NONE {:x 1 &quot;y&quot; 2 &apos;z 3}) ;; {:x 1, z 3} Even if that didn&apos;t work, it wouldn&apos;t be that hard to extend specter to work the way you want."><y>#</y><d>2023-06-16</d><h>18:24</h><r>phronmophobic</r>I&apos;m not sure what you tried that didn&apos;t work, but the following seems to work for me:
+<pre>(specter/setval [specter/ALL (comp string? first)]
+                specter/NONE
+                {:x  1
+                 &quot;y&quot; 2
+                 &apos;z  3})
+;; {:x 1, z 3}</pre>
+Even if that didn&apos;t work, it wouldn&apos;t be that hard to extend specter to work the way you want.</z><z id="t1686939991" t="phronmophobic key was changed to first because specter/ALL on a map seems to navigate to a selection of two element vectors instead of map entries for some reason (maybe there could be an improvement there)."><y>#</y><d>2023-06-16</d><h>18:26</h><r>phronmophobic</r><code>key</code> was changed to <code>first</code> because <code>specter/ALL</code> on a map seems to navigate to a selection of two element vectors instead of map entries for some reason (maybe there could be an improvement there).</z><z id="t1686940043" t="caleb.macdonaldblack Wow. rookie error. I’m not sure why I thought sp/all wouldn’t return the map-entries. Thanks 😊"><y>#</y><d>2023-06-16</d><h>18:27</h><r>caleb.macdonaldblack</r>Wow. rookie error. I’m not sure why I thought <code>sp/all</code> wouldn’t return the map-entries. Thanks <b>😊</b></z><z id="t1686952836" t="nathanmarz it&apos;s easier to just do (setval [MAP-KEYS string?] NONE data)"><y>#</y><d>2023-06-16</d><h>22:00</h><r>nathanmarz</r>it&apos;s easier to just do <code>(setval [MAP-KEYS string?] NONE data)</code></z><z id="t1686967135" t="caleb.macdonaldblack That’s a nice solution too. Didn’t think of that either. Thanks"><y>#</y><d>2023-06-17</d><h>01:58</h><r>caleb.macdonaldblack</r>That’s a nice solution too. Didn’t think of that either. Thanks</z><z id="t1687278887" t="mmer Following on from the previous question is there a way to remove map entries that have certain keys. I want to remove serveral keys and values from a map."><y>#</y><d>2023-06-20</d><h>16:34</h><w>mmer</w>Following on from the previous question is there a way to remove map entries that have certain keys.  I want to remove serveral keys and values from a map.</z><z id="t1687279189" t="mmer The answer is to use setval with must."><y>#</y><d>2023-06-20</d><h>16:39</h><r>mmer</r>The answer is to use setval with must.</z><z id="t1688288458" t="Lidor Cohen Hello! I&apos;d like to do a traverse but with add value at the end: (sp/traverse [(sp/multi-path (sp/view coll) [(sp/view protos) sp/ALL] [(sp/view (constantly (OEND.)))]) (sp/pred #(or (= (type %) OEND) (ocontains? % k)))] this) something of this sort 👆 :skin-tone-2: What would be the recommended way of achieving that: the provided code or select -&gt; setval -&gt; traverse?"><y>#</y><d>2023-07-02</d><h>09:00</h><w>Lidor Cohen</w>Hello! I&apos;d like to do a <code>traverse</code> but with add value at the end:
+<pre>(sp/traverse [(sp/multi-path (sp/view coll)
+                             [(sp/view protos) sp/ALL]
+                             [(sp/view (constantly (OEND.)))])
+              (sp/pred #(or (= (type %) OEND) (ocontains? % k)))] this)</pre>
+something of this sort <b>👆</b><b>:skin-tone-2:</b>
+What would be the recommended way of achieving that:
+the provided code or select -&gt; setval -&gt; traverse?</z><z id="t1688613748" t="lvh Hi! I have a multi-path with a ton of paths with identical prefixes. Should I expect that to get optimized away, or is it faster to make the shared prefix explicit?"><y>#</y><d>2023-07-06</d><h>03:22</h><w>lvh</w>Hi! I have a multi-path with a ton of paths with identical prefixes. Should I expect that to get optimized away, or is it faster to make the shared prefix explicit?</z><z id="t1688660963" t="nathanmarz [:attrs {:href &quot;/_/_/users/U07QKGF9P&quot;}] Specter doesn&apos;t do any optimizations like that, so it will be faster to make the shared prefix explicit"><y>#</y><d>2023-07-06</d><h>16:29</h><w>nathanmarz</w><a>@lvh</a> Specter doesn&apos;t do any optimizations like that, so it will be faster to make the shared prefix explicit</z><z id="t1689068107" t="Lidor Cohen Hi! is traverse lazy? for example: (reduce (fn [acc x] (foo acc x)) init-val (sp/traverse [sp/ALL (sp/pred some-pred) (sp/view bar)] coll)) Will bar be executed on all the collection anyway? Or should foo return a reduced value on some element, will traverse halt and subsequent elements will not meet (sp/view bar) ?"><y>#</y><d>2023-07-11</d><h>09:35</h><w>Lidor Cohen</w>Hi! is <code>traverse</code> lazy?
+for example:
+<pre>(reduce (fn [acc x] (foo acc x))
+        init-val
+        (sp/traverse [sp/ALL (sp/pred some-pred) (sp/view bar)] coll))</pre>
+Will <code>bar</code> be executed on all the collection anyway?
+Or should <code>foo</code> return a reduced value on some element, will traverse halt and subsequent elements will not meet <code>(sp/view bar)</code>?</z><z id="t1689071921" t="mmer Hi I have a list of maps, I want to return one of the maps based on the value of the :name key in the maps. i.e. give me the name where :name = &quot;fred&quot;?"><y>#</y><d>2023-07-11</d><h>10:38</h><w>mmer</w>Hi I have a list of maps, I want to return one of the maps based on the value of the <code>:name</code> key in the maps.  i.e. give me the name where :name = &quot;fred&quot;?</z><z id="t1689078089" t="Lidor Cohen (select-any [ALL (pred #(= (:name %) &quot;fred&quot;))] list-of-maps) I think..."><y>#</y><d>2023-07-11</d><h>12:21</h><r>Lidor Cohen</r><pre>(select-any [ALL (pred #(= (:name %) &quot;fred&quot;))] list-of-maps)</pre>
+I think...</z><z id="t1689078450" t="mmer That does not seem to work. I am getting the &quot;%&quot; is not allowed."><y>#</y><d>2023-07-11</d><h>12:27</h><r>mmer</r>That does not seem to work.  I am getting the &quot;%&quot; is not allowed.</z><z id="t1689078650" t="Lidor Cohen yeah"><y>#</y><d>2023-07-11</d><h>12:30</h><r>Lidor Cohen</r>yeah</z><z id="t1689078652" t="Lidor Cohen sorry"><y>#</y><d>2023-07-11</d><h>12:30</h><r>Lidor Cohen</r>sorry</z><z id="t1689078663" t="Lidor Cohen #(= (:name %) &quot;fred&quot;)"><y>#</y><d>2023-07-11</d><h>12:31</h><r>Lidor Cohen</r><pre>#(= (:name %) &quot;fred&quot;)</pre></z><z id="t1689078670" t="mmer It was what I hoped for"><y>#</y><d>2023-07-11</d><h>12:31</h><r>mmer</r>It was what I hoped for</z><z id="t1689078720" t="Lidor Cohen forgot the # for the lambda :melting_face:"><y>#</y><d>2023-07-11</d><h>12:32</h><r>Lidor Cohen</r>forgot the <code>#</code> for the lambda <b>:melting_face:</b></z><z id="t1689080103" t="mmer Thanks that worked."><y>#</y><d>2023-07-11</d><h>12:55</h><r>mmer</r>Thanks that worked.</z><z id="t1689092781" t="nathanmarz [:attrs {:href &quot;/_/_/users/U8RHR1V60&quot;}] it&apos;s not &quot;lazy&quot; in the sense of clojure&apos;s lazy data structures, but it doesn&apos;t execute anything unless the caller requests the next element"><y>#</y><d>2023-07-11</d><h>16:26</h><w>nathanmarz</w><a>@lidorcg</a> it&apos;s not &quot;lazy&quot; in the sense of clojure&apos;s lazy data structures, but it doesn&apos;t execute anything unless the caller requests the next element</z><z id="t1689092815" t="nathanmarz so if your reduce function stops iteration using reduced , traverse won&apos;t look at additional elements"><y>#</y><d>2023-07-11</d><h>16:26</h><w>nathanmarz</w>so if your reduce function stops iteration using <code>reduced</code>, <code>traverse</code> won&apos;t look at additional elements</z><z id="t1689092843" t="nathanmarz so if your reduce function was doing that, bar would not necessarily be called on all elements"><y>#</y><d>2023-07-11</d><h>16:27</h><w>nathanmarz</w>so if your reduce function was doing that, <code>bar</code> would not necessarily be called on all elements</z><z id="t1689100099" t="Lidor Cohen Thanks 🙏 :skin-tone-3:"><y>#</y><d>2023-07-11</d><h>18:28</h><r>Lidor Cohen</r>Thanks <b>🙏</b><b>:skin-tone-3:</b></z><z id="t1689862032" t="itai edri Hey all, how can I duplicate an element in a vector? For example: [{:a 1} {:b 2 :duplicate 3} {:c 3} {:d 4}] =&gt; [{:a 1} {:b 2 :duplicate 3} {:b 2 :duplicate 3} {:b 2 :duplicate 3} {:c 3} {:d 4}] I was thinking about transform with flatten: (-&gt;&gt; x (transform [ALL (pred :duplicate)] #(repeat (:duplicate %) %)) flatten) But how can I do it when the vector is in a nested structure? {:a {:b { :x [...] }}"><y>#</y><d>2023-07-20</d><h>14:07</h><w>itai edri</w>Hey all, how can I duplicate an element in a vector?
+For example:
+<pre>[{:a 1} {:b 2 :duplicate 3} {:c 3} {:d 4}] =&gt; [{:a 1} {:b 2 :duplicate 3} {:b 2 :duplicate 3} {:b 2 :duplicate 3} {:c 3} {:d 4}]</pre>
+I was thinking about transform with flatten:
+<pre>(-&gt;&gt; x (transform [ALL (pred :duplicate)] #(repeat (:duplicate %) %)) flatten)</pre>
+But how can I do it when the vector is in a nested structure?
+<pre>{:a {:b { :x [...] }}</pre></z><z id="t1689871865" t="mmer You navigate to the nested object [ :a :b :x ALL(pred #(contains? % :duplicate))] "><y>#</y><d>2023-07-20</d><h>16:51</h><r>mmer</r>You navigate to the nested object
+<pre>[ :a :b :x  ALL(pred #(contains? % :duplicate))]</pre>
+</z><z id="t1690434563" t="Lidor Cohen Hi, I want to do (what I think is) some advanced stuff in specter. Basically make common navigators work with https://github.com/hoplon/javelin cells. I started digging in and found that some navigators are basically a protocol, which is awesome cause that means if I just extend Cell to implement them we&apos;re golden. I just wanted to know if I&apos;m on the right track or if anyone can give me some tips on how to go about it. Thanks in advance 😁"><y>#</y><d>2023-07-27</d><h>05:09</h><w>Lidor Cohen</w>Hi, I want to do (what I think is) some advanced stuff in specter.
+Basically make common navigators work with <a href="https://github.com/hoplon/javelin" target="_blank">https://github.com/hoplon/javelin</a> cells.
+I started digging in and found that some navigators are basically a protocol, which is awesome cause that means if I just extend <code>Cell</code> to implement them we&apos;re golden.
+
+I just wanted to know if I&apos;m on the right track or if anyone can give me some tips on how to go about it.
+
+Thanks in advance <b>😁</b></z><z id="t1690452156" t="Lidor Cohen starting to work on it and I&apos;m having trouble with defnav in cljs, probably macro related"><y>#</y><d>2023-07-27</d><h>10:02</h><r>Lidor Cohen</r>starting to work on it and I&apos;m having trouble with <code>defnav</code> in cljs, probably macro related</z><z id="t1690482909" t="nathanmarz [:attrs {:href &quot;/_/_/users/U8RHR1V60&quot;}] Some of the navigators are based on protocols (e.g. ALL), others aren&apos;t. A navigator like keypath works if the target object implements IPersistentMap . But that&apos;s an interface, not a protocol, so you can&apos;t implement that after the fact."><y>#</y><d>2023-07-27</d><h>18:35</h><w>nathanmarz</w><a>@lidorcg</a> Some of the navigators are based on protocols (e.g. ALL), others aren&apos;t. A navigator like <code>keypath</code> works if the target object implements <code>IPersistentMap</code>. But that&apos;s an interface, not a protocol, so you can&apos;t implement that after the fact.</z><z id="t1690483311" t="Lidor Cohen After some digging I think I need to do some kind of wrapping to each navigator something like: (select* [this structure next-fn] ((my-foo next-fn) structure)) But on each path. I think higher order navigators like selected or transformed are what I need, am I on the right track? Where can I learn more about defining higher order navigators?"><y>#</y><d>2023-07-27</d><h>18:41</h><r>Lidor Cohen</r>After some digging I think I need to do some kind of wrapping to each navigator something like:
+<pre>(select* [this structure next-fn]
+  ((my-foo next-fn) structure))
+</pre>
+But on each path.
+I think higher order navigators like <code>selected</code> or <code>transformed</code> are what I need, am I on the right track? Where can I learn more about defining higher order navigators?</z><z id="t1690515291" t="nathanmarz You probably just want navigators specific to those data structures defined with defnav"><y>#</y><d>2023-07-28</d><h>03:34</h><r>nathanmarz</r>You probably just want navigators specific to those data structures defined with <code>defnav</code></z><z id="t1690526692" t="Lidor Cohen Cell is a wrapping data structure like atom, the difference is while atom does deref and that&apos;s that, from there you continue normally, cells needs to propagate state so each navigation will also return cell: (def x (cell {:list [{:n 5}{:n 3}...]}) =&gt; cell&lt;{...}&gt; (def l ((formula get) x :list)) =&gt; cell&lt;[...]&gt; ((formula map) #((formula get) % :n) l) =&gt; cell&lt;[5 3...]&gt; I think I can make the following work with transform and select: (defnav ^{:doc &quot;Navigates to atom value.&quot;} CELL [] (sp/select* [this structure next-fn] ((formula next-fn) structure)) (sp/transform* [this structure next-fn] (do (swap! structure next-fn) structure))) I believe that that will bring me to: (select [CELL :list CELL ALL CELL :n] x) =&gt; cell&lt;[5 3 ...]&gt; From there I might be able to get to: (select [(cell-nav :list ALL :n)] x) =&gt; cell&lt;[5 3 ...]&gt; If you have any thoughts \ tips I&apos;ll be very thankful :)"><y>#</y><d>2023-07-28</d><h>06:44</h><r>Lidor Cohen</r>Cell is a wrapping data structure like atom, the difference is while atom does deref and that&apos;s that, from there you continue normally, cells needs to propagate state so each navigation will also return cell:
+
+<pre>(def x (cell {:list [{:n 5}{:n 3}...]}) =&gt; cell&lt;{...}&gt;
+(def l ((formula get) x :list)) =&gt; cell&lt;[...]&gt;
+((formula map) #((formula get) % :n) l) =&gt; cell&lt;[5 3...]&gt;</pre>
+I think I can make the following work with transform and select:
+<pre>(defnav
+  ^{:doc &quot;Navigates to atom value.&quot;}
+  CELL
+  []
+  (sp/select* [this structure next-fn]
+              ((formula next-fn) structure))
+  (sp/transform* [this structure next-fn]
+                 (do
+                   (swap! structure next-fn)
+                   structure)))</pre>
+I believe that that will bring me to:
+<pre>(select [CELL :list CELL ALL CELL :n] x) =&gt; cell&lt;[5 3 ...]&gt;</pre>
+From there I might be able to get to:
+<pre>(select [(cell-nav :list ALL :n)] x) =&gt; cell&lt;[5 3 ...]&gt;</pre>
+If you have any thoughts \ tips I&apos;ll be very thankful :)</z><z id="t1690566011" t="nathanmarz That looks like the right approach. Take a look at the definition of compact which is similar to what you want to do with cell-nav"><y>#</y><d>2023-07-28</d><h>17:40</h><r>nathanmarz</r>That looks like the right approach. Take a look at the definition of <code>compact</code> which is similar to what you want to do with <code>cell-nav</code></z><z id="t1690724765" t="Lidor Cohen ok, I was able to define CELL: (defnav CELL [] (select* [this structure next-fn] ((maybe-formula next-fn) structure)) (transform* [this structure next-fn] (do (swap! structure next-fn) structure))) but on simple use-cases I already found a couple of issues: (def x (cell {:a 1})) =&gt; [#object [javelin.core.Cell {:a 1}]] (-&gt; (sp/select [CELL :a] x) (get 0)) =&gt; 1 ;; not a cell?? (swap! x #(assoc-in % [:a] 42)) =&gt; :repl/exception! ; ; Execution error (Error) at (&lt;cljs repl&gt;:1). ; conj! after persistent! So I wasn&apos;t able to extract a simple value using CELL. I am able to do the following because I extended cell to support lookup: (def x (cell {:a 1})) =&gt; [#object [javelin.core.Cell {:a 1}]] (def y (-&gt; (sp/select [:a] x) (get 0))) =&gt; #object [javelin.core.Cell 1] (swap! x #(assoc-in % [:a] 42)) =&gt; {:a 42} y =&gt; #object [javelin.core.Cell 42] Another interesting phenomenon: (-&gt; (sp/select-any [CELL :a] x)) =&gt; #object[cljs.core.Reduced] This is related to the fact that cell conceals it&apos;s data, and so unreduced doesn&apos;t &quot;work&quot; on them. I came across this issue before, filtering and reducing on cells (when the outer process need to make a decision based on the value of the cell) isn&apos;t trivial."><y>#</y><d>2023-07-30</d><h>13:46</h><r>Lidor Cohen</r>ok, I was able to define CELL:
+<pre>(defnav
+  CELL
+  []
+  (select* [this structure next-fn]
+           ((maybe-formula next-fn) structure))
+  (transform* [this structure next-fn]
+              (do
+                (swap! structure next-fn)
+                structure)))</pre>
+but on simple use-cases I already found a couple of issues:
+<pre>(def x (cell {:a 1})) =&gt; [#object [javelin.core.Cell {:a 1}]]
+(-&gt; (sp/select [CELL :a] x)
+    (get 0)) =&gt; 1 ;; not a cell??
+(swap! x #(assoc-in % [:a] 42)) =&gt;
+:repl/exception!
+; 
+; Execution error (Error) at (&lt;cljs repl&gt;:1).
+; conj! after persistent!</pre>
+So I wasn&apos;t able to extract a simple value using CELL.
+I am able to do the following because I extended cell to support lookup:
+<pre>(def x (cell {:a 1})) =&gt; [#object [javelin.core.Cell {:a 1}]]
+(def y (-&gt; (sp/select [:a] x)
+           (get 0))) =&gt; #object [javelin.core.Cell 1]
+(swap! x #(assoc-in % [:a] 42)) =&gt; {:a 42}
+
+y =&gt; #object [javelin.core.Cell 42]</pre>
+Another interesting phenomenon:
+<pre>(-&gt; (sp/select-any [CELL :a] x)) =&gt; #object[cljs.core.Reduced]</pre>
+This is related to the fact that cell conceals it&apos;s data, and so unreduced doesn&apos;t &quot;work&quot; on them.
+I came across this issue before, filtering and reducing on cells (when the outer process need to make a decision based on the value of the cell) isn&apos;t trivial.</z><z id="t1690620563" t="hmadelaine Hi everyone ! I have a simple need but don’t find the right navigator t o do it. Is it possible do insert en sub sequence into a sequence : (sp/setval [path to an element] [7 9] [0 1 2 3 4]) =&gt; [0 1 7 9 2 3 4] Thank you !"><y>#</y><d>2023-07-29</d><h>08:49</h><w>hmadelaine</w>Hi everyone !
+I have a simple need but don’t find the right navigator t o do it.
+Is it possible do insert en sub sequence into a sequence :
+<pre>(sp/setval [path to an element] [7 9] [0 1 2 3 4]) =&gt; [0 1 7 9 2 3 4]</pre>
+Thank you !</z><z id="t1690624087" t="rolt (srange 3 3)"><y>#</y><d>2023-07-29</d><h>09:48</h><r>rolt</r><code>(srange 3 3)</code></z><z id="t1690624157" t="hmadelaine Thanks I am going to try !"><y>#</y><d>2023-07-29</d><h>09:49</h><r>hmadelaine</r>Thanks I am going to try !</z><z id="t1690624254" t="rolt (keyword here is &quot;subsequence&quot; in the doc)"><y>#</y><d>2023-07-29</d><h>09:50</h><r>rolt</r>(keyword here is &quot;subsequence&quot; in the doc)</z><z id="t1690639803" t="hmadelaine (sp/setval (sp/srange 2 2) [7 9] [0 1 2 3 4]) =&gt; [0 1 7 9 2 3 4] 👍"><y>#</y><d>2023-07-29</d><h>14:10</h><r>hmadelaine</r><pre>(sp/setval (sp/srange 2 2) [7 9] [0 1 2 3 4]) =&gt; [0 1 7 9 2 3 4]</pre>
+<b>👍</b></z><z id="t1690702126" t="Lidor Cohen Hi everyone! I&apos;m having trouble using defnav from (shadow)cljs. I think it has something do with macros + cljs and I haven&apos;t had much experience with that yet. if anyone had experience with that I&apos;ll appreciate the help 🙂 My current error is: (defnav -------^------------------------------------------------------------------------ null Can&apos;t def ns-qualified name in namespace CELL-sp at line 36 utils/specter.cljc -------------------------------------------------------------------------------- 37 | CELL 38 | [] 39 | (sp/select* [this structure next-fn] 40 | ((maybe-formula next-fn) structure)) -------------------------------------------------------------------------------- "><y>#</y><d>2023-07-30</d><h>07:28</h><w>Lidor Cohen</w>Hi everyone! I&apos;m having trouble using <code>defnav</code> from (shadow)cljs.
+I think it has something do with macros + cljs and I haven&apos;t had much experience with that yet. if anyone had experience with that I&apos;ll appreciate the help <b>🙂</b>
+
+My current error is:
+<pre>(defnav
+-------^------------------------------------------------------------------------
+null
+Can&apos;t def ns-qualified name in namespace CELL-sp at line 36 utils/specter.cljc
+--------------------------------------------------------------------------------
+  37 |   CELL
+  38 |   []
+  39 |   (sp/select* [this structure next-fn]
+  40 |               ((maybe-formula next-fn) structure))
+-------------------------------------------------------------------------------- </pre></z><z id="t1690724071" t="Lidor Cohen for future ref, this was my issue: sp/select* defnav expand to: (declare CELL-sp/select*) instead of CELL-select* the / messes up the var&apos;s name"><y>#</y><d>2023-07-30</d><h>13:34</h><r>Lidor Cohen</r>for future ref, this was my issue:
+<pre>sp/select*</pre>
+<code>defnav</code> expand to: <code>(declare CELL-sp/select*)</code>
+instead of <code>CELL-select*</code>
+the <code>/</code> messes up the var&apos;s name</z><z id="t1692274447" t="andyhorng Hi everyone! I am wondering is there any navigator like srange but without throwing IndexOutOfBoundsException?"><y>#</y><d>2023-08-17</d><h>12:14</h><w>andyhorng</w>Hi everyone! I am wondering is there any navigator like srange but without throwing IndexOutOfBoundsException?</z><z id="t1692274895" t="andyhorng I am doing something like (take 1 []) which returns an empty list."><y>#</y><d>2023-08-17</d><h>12:21</h><r>andyhorng</r>I am doing something like <code>(take 1 [])</code> which returns an empty list.</z><z id="t1692299446" t="nathanmarz [:attrs {:href &quot;/_/_/users/UNKNGH2EL&quot;}] check out srange-dynamic"><y>#</y><d>2023-08-17</d><h>19:10</h><w>nathanmarz</w><a>@andyhorng168</a> check out <code>srange-dynamic</code></z><z id="t1692335623" t="andyhorng Great! Thanks"><y>#</y><d>2023-08-18</d><h>05:13</h><r>andyhorng</r>Great! Thanks</z><z id="t1692518389" t="Lidor Cohen Hello everyone, if I wanna recursively traverse a structure just for a side effect what should I use? Is it select with view or something else?"><y>#</y><d>2023-08-20</d><h>07:59</h><w>Lidor Cohen</w>Hello everyone, if I wanna recursively traverse a structure just for a side effect what should I use?
+Is it select with <code>view</code> or something else?</z><z id="t1692521015" t="steveb8n https://github.com/redplanetlabs/specter/wiki/Using-Specter-Recursively"><y>#</y><d>2023-08-20</d><h>08:43</h><w>steveb8n</w><a href="https://github.com/redplanetlabs/specter/wiki/Using-Specter-Recursively" target="_blank">https://github.com/redplanetlabs/specter/wiki/Using-Specter-Recursively</a></z><z id="t1692522330" t="Lidor Cohen I was reluctant of adding the word &quot;recursively&quot; because I knew that I&apos;ll get a link to recursive specter 😅 I know how to do recursion in specter, my question was mainly about the effects and recursion was more of a background information."><y>#</y><d>2023-08-20</d><h>09:05</h><r>Lidor Cohen</r>I was reluctant of adding the word &quot;recursively&quot; because I knew that I&apos;ll get a link to recursive specter <b>😅</b>
+I know how to do recursion in specter, my question was mainly about the effects and recursion was more of a background information.</z><z id="t1692523279" t="steveb8n It was inevitable 😂 . We use recursive navs also. For side effects, could you use a command pattern to keep it pure? If so, you can reduce using the recursive nav."><y>#</y><d>2023-08-20</d><h>09:21</h><r>steveb8n</r>It was inevitable <b>😂</b>. We use recursive navs also. For side effects, could you use a command pattern to keep it pure? If so, you can reduce using the recursive nav.</z><z id="t1692523316" t="steveb8n Not sure I understand what you mean by side effects in this case?"><y>#</y><d>2023-08-20</d><h>09:21</h><r>steveb8n</r>Not sure I understand what you mean by side effects in this case?</z></g><g id="s26"><z id="t1692524013" t="Lidor Cohen I want to print tuples of a map with each of it&apos;s value: (do-some-magic {:a 1, :b 2}) =&gt; ; [{:a 1, :b 2}, 1] ; [{:a 1, :b 2}, 2]"><y>#</y><d>2023-08-20</d><h>09:33</h><r>Lidor Cohen</r>I want to print tuples of a map with each of it&apos;s value:
+<pre>(do-some-magic {:a 1, :b 2}) =&gt;
+; [{:a 1, :b 2}, 1]
+; [{:a 1, :b 2}, 2]</pre></z><z id="t1692524529" t="steveb8n Hmm, still don&apos;t have enough context to grok your problem. If trying to print a tree, we have done that using a zipper with side effects. Would that work?"><y>#</y><d>2023-08-20</d><h>09:42</h><r>steveb8n</r>Hmm, still don&apos;t have enough context to grok your problem. If trying to print a tree, we have done that using a zipper with side effects. Would that work?</z><z id="t1692524557" t="Lidor Cohen Sure, i think..."><y>#</y><d>2023-08-20</d><h>09:42</h><r>Lidor Cohen</r>Sure, i think...</z><z id="t1692522330" t="Lidor Cohen I was reluctant of adding the word &quot;recursively&quot; because I knew that I&apos;ll get a link to recursive specter 😅 I know how to do recursion in specter, my question was mainly about the effects and recursion was more of a background information."><y>#</y><d>2023-08-20</d><h>09:05</h><w>Lidor Cohen</w>I was reluctant of adding the word &quot;recursively&quot; because I knew that I&apos;ll get a link to recursive specter <b>😅</b>
+I know how to do recursion in specter, my question was mainly about the effects and recursion was more of a background information.</z><z id="t1692538766" t="Lidor Cohen Hello again! 😊 I&apos;m interested in writing a Specter code snippet that takes a list of maps as input and performs a merging operation using (conj []) . The goal is to create a resulting map where each key holds a vector containing corresponding values from the input maps. To illustrate, the transformation should turn [{:a 1 :b 2} {:a 3 :b 4} {:a 5 :b 6}] into {:a [1 3 5], :b [2 4 6]} . As a bonus, if all the values within the input maps are themselves maps, I&apos;d like to extend this behavior recursively. I&apos;ve already implemented a solution for this using merge-with , but I wanted to try out the same process using Specter. This will also serve as an opportunity to compare the performance of the two approaches. Thanks in advance"><y>#</y><d>2023-08-20</d><h>13:39</h><w>Lidor Cohen</w>Hello again! <b>😊</b>
+
+I&apos;m interested in writing a Specter code snippet that takes a list of maps as input and performs a merging operation using <code>(conj [])</code>.
+ The goal is to create a resulting map where each key holds a vector
+containing corresponding values from the input maps. To illustrate, the
+transformation should turn <code>[{:a 1 :b 2} {:a 3 :b 4} {:a 5 :b 6}]</code> into <code>{:a [1 3 5], :b [2 4 6]}</code>.
+
+As
+ a bonus, if all the values within the input maps are themselves maps,
+I&apos;d like to extend this behavior recursively. I&apos;ve already implemented a
+ solution for this using <code>merge-with</code>,
+ but I wanted to try out the same process using Specter. This will
+also serve as an opportunity to compare the performance of the two
+approaches.
+
+Thanks in advance</z><z id="t1693125180" t="Lidor Cohen nothing? 🥲"><y>#</y><d>2023-08-27</d><h>08:33</h><r>Lidor Cohen</r>nothing? <b>🥲</b></z><z id="t1693155248" t="phronmophobic I think you’ll get more responses if you explain what you tried, what worked, and what didn’t work."><y>#</y><d>2023-08-27</d><h>16:54</h><r>phronmophobic</r>I think you’ll get more responses if you explain what you tried, what worked, and what didn’t work.</z><z id="t1693156121" t="Lidor Cohen Today I had an implementation of the sort: (-&gt;&gt; maps (select [ALL ALL]) (group-by second) (transform [MAP-VALS] #(select [ALL LAST] %)) But it was way slower than the simple clojure implementation so I dropped that."><y>#</y><d>2023-08-27</d><h>17:08</h><r>Lidor Cohen</r>Today I had an implementation of the sort:
+<pre>(-&gt;&gt; maps
+     (select [ALL ALL])
+     (group-by second)
+     (transform [MAP-VALS] #(select [ALL LAST] %))
+</pre>
+But it was way slower than the simple clojure implementation so I dropped that.</z><z id="t1693156266" t="phronmophobic In general, I think you’ll get more of a benefit if you can make the the transformation in one step."><y>#</y><d>2023-08-27</d><h>17:11</h><r>phronmophobic</r>In general, I think you’ll get more of a benefit if you can make the the transformation in one step.</z><z id="t1693156419" t="Lidor Cohen I did that as well using subselect and transformed, but it performed even worse. I think specter is just not a great fit for those kinds of transformations (+ reduce)"><y>#</y><d>2023-08-27</d><h>17:13</h><r>Lidor Cohen</r>I did that as well using subselect and transformed, but it performed even worse.
+I think specter is just not a great fit for those kinds of transformations (+ reduce)</z><z id="t1693156816" t="phronmophobic If you rewrite your spec version to not require the transformation after the group-by, that might help."><y>#</y><d>2023-08-27</d><h>17:20</h><r>phronmophobic</r>If you rewrite your spec version to not require the transformation after the group-by, that might help.</z><z id="t1693157061" t="Lidor Cohen I tried to think of ways to do that using only specter but I couldn&apos;t find any, that&apos;s why I asked here for ideas 😅"><y>#</y><d>2023-08-27</d><h>17:24</h><r>Lidor Cohen</r>I tried to think of ways to do that using only specter but I couldn&apos;t find any, that&apos;s why I asked here for ideas <b>😅</b></z><z id="t1693157095" t="phronmophobic Right, but you didn&apos;t include any of the methods you tried."><y>#</y><d>2023-08-27</d><h>17:24</h><r>phronmophobic</r>Right, but you didn&apos;t include any of the methods you tried.</z><z id="t1693157233" t="Lidor Cohen When I asked I wasn&apos;t able to think of any idea so there weren&apos;t any methods to write about. Only when I relaxed my constraints today (after I bumped) I wrote the attempt using group-by."><y>#</y><d>2023-08-27</d><h>17:27</h><r>Lidor Cohen</r>When I asked I wasn&apos;t able to think of any idea so there weren&apos;t any methods to write about.
+Only when I relaxed my constraints today (after I bumped) I wrote the attempt using group-by.</z><z id="t1693157511" t="phronmophobic What&apos;s the reason behind wanting this particular transformation? Why does it need to be fast?"><y>#</y><d>2023-08-27</d><h>17:31</h><r>phronmophobic</r>What&apos;s the reason behind wanting this particular transformation? Why does it need to be fast?</z><z id="t1693157551" t="phronmophobic There are various libraries that have faster versions of group-by ."><y>#</y><d>2023-08-27</d><h>17:32</h><r>phronmophobic</r>There are various libraries that have faster versions of <code>group-by</code> .</z><z id="t1693157598" t="phronmophobic If you care about performance, then you&apos;ll probably want to do some amount of profiling."><y>#</y><d>2023-08-27</d><h>17:33</h><r>phronmophobic</r>If you care about performance, then you&apos;ll probably want to do some amount of profiling.</z><z id="t1693157694" t="Lidor Cohen It&apos;s a core operation in our code that is currently a performance bottleneck"><y>#</y><d>2023-08-27</d><h>17:34</h><r>Lidor Cohen</r>It&apos;s a core operation in our code that is currently a performance bottleneck</z><z id="t1693157733" t="Lidor Cohen We did profiling that&apos;s how we zeroed in on that code piece"><y>#</y><d>2023-08-27</d><h>17:35</h><r>Lidor Cohen</r>We did profiling that&apos;s how we zeroed in on that code piece</z><z id="t1693157795" t="Lidor Cohen But that code is already after performance refactoring so it might be solved."><y>#</y><d>2023-08-27</d><h>17:36</h><r>Lidor Cohen</r>But that code is already after performance refactoring so it might be solved.</z><z id="t1693157898" t="phronmophobic The reason I ask is there are many ways to approach the problem and the solution will depend on these types of factors."><y>#</y><d>2023-08-27</d><h>17:38</h><r>phronmophobic</r>The reason I ask is there are many ways to approach the problem and the solution will depend on these types of factors.</z><z id="t1693157973" t="phronmophobic If you are still looking for alternatives, you can also look at https://github.com/cgrand/xforms and https://github.com/cnuernber/ham-fisted which both have alternate implementations of group-by that could help speed things up."><y>#</y><d>2023-08-27</d><h>17:39</h><r>phronmophobic</r>If you are still looking for alternatives, you can also look at <a href="https://github.com/cgrand/xforms" target="_blank">https://github.com/cgrand/xforms</a> and <a href="https://github.com/cnuernber/ham-fisted" target="_blank">https://github.com/cnuernber/ham-fisted</a> which both have alternate implementations of <code>group-by</code> that could help speed things up.</z><z id="t1693158095" t="Lidor Cohen Actually the group-by implementation was way slower than another implementation of iterating on all the keys. And that was a bit slower than merge-with (that actually surprised me)."><y>#</y><d>2023-08-27</d><h>17:41</h><r>Lidor Cohen</r>Actually the group-by implementation was way slower than another implementation of iterating on all the keys.
+And that was a bit slower than merge-with (that actually surprised me).</z><z id="t1693158177" t="phronmophobic group-by , merge , and merge-with are not the fastest options which is why there are several alternate implementations."><y>#</y><d>2023-08-27</d><h>17:42</h><r>phronmophobic</r><code>group-by</code>, <code>merge</code>, and <code>merge-with</code> are not the fastest options which is why there are several alternate implementations.</z><z id="t1693158346" t="Lidor Cohen ham looks very interesting and relevant to me, I&apos;ll try it. Thank you 🙏 :skin-tone-3:"><y>#</y><d>2023-08-27</d><h>17:45</h><r>Lidor Cohen</r>ham looks very interesting and relevant to me, I&apos;ll try it.
+Thank you <b>🙏</b><b>:skin-tone-3:</b></z><z id="t1693165181" t="Lidor Cohen Now I see ham only support clj (I need cljs) what a shame 😔"><y>#</y><d>2023-08-27</d><h>19:39</h><r>Lidor Cohen</r>Now I see ham only support clj (I need cljs) what a shame <b>😔</b></z><z id="t1693209082" t="xificurC how would the recursive case look like?"><y>#</y><d>2023-08-28</d><h>07:51</h><r>xificurC</r>how would the recursive case look like?</z><z id="t1693125180" t="Lidor Cohen nothing? 🥲"><y>#</y><d>2023-08-27</d><h>08:33</h><w>Lidor Cohen</w>nothing? <b>🥲</b></z><z id="t1692942629" t="steveb8n Q: is there a way to “expand” a single value in a sequence with N values? e.g. (transform [ALL #{2} ] (fn [v] [20 20]) [1 2 3]) =&gt; [1 20 20 3] I have been trying something like the setval / END technique but can’t figure it out"><y>#</y><d>2023-08-25</d><h>05:50</h><w>steveb8n</w>Q: is there a way to “expand” a single value in a sequence with N values?
+e.g. (transform [ALL #{2} ] (fn [v] [20 20]) [1 2 3])
+=&gt; [1 20 20 3]
+
+I have been trying something like the setval / END technique but can’t figure it out</z><z id="t1692950984" t="mmer I have found that sometimes using specter as an initial transformer and using other functions can often yield result you want, rather than trying to get specter to do it in one step. Hence: (vec(flatten(transform [ALL #{2}] (fn [v] [20 20]) [1 2 3])))"><y>#</y><d>2023-08-25</d><h>08:09</h><r>mmer</r>I have found that sometimes using specter as an initial transformer and using other functions can often yield result you want, rather than trying to get specter to do it in one step.
+Hence:
+(vec(flatten(transform [ALL #{2}] (fn [v] [20 20]) [1 2 3])))</z><z id="t1693001598" t="steveb8n thanks. sometimes I try too hard to use specter paths"><y>#</y><d>2023-08-25</d><h>22:13</h><r>steveb8n</r>thanks. sometimes I try too hard to use specter paths</z><z id="t1693117500" t="rolt (setval [(srange 1 2)] [20 20] [1 2 3])"><y>#</y><d>2023-08-27</d><h>06:25</h><r>rolt</r><code>(setval [(srange 1 2)] [20 20] [1 2 3])</code></z><z id="t1693457361" t="Lidor Cohen I have the following selector: (def selector [sp/META (sp/must ::Obj) (sp/must ::PARENT) sp/ATOM]) now I have the following: (sp/select-any selector {}) =&gt; NONE (sp/select-first selector {}) =&gt; nil I first went with select-any because it&apos;s: &quot;This is the most efficient of the various selection operations&quot;. But what I need is nil instead of NONE , so my question is this: Is there a way to get nil out of select-any and still being more efficient than select-first ? or not? or for this kind of selector it doesn&apos;t really matter?"><y>#</y><d>2023-08-31</d><h>04:49</h><w>Lidor Cohen</w>I have the following selector:
+<pre>(def selector [sp/META (sp/must ::Obj) (sp/must ::PARENT) sp/ATOM])</pre>
+now I have the following:
+<pre>(sp/select-any selector {}) =&gt; NONE
+(sp/select-first selector {}) =&gt; nil</pre>
+I first went with <code>select-any</code> because it&apos;s: &quot;This is the most efficient of the various selection operations&quot;.
+But what I need is <code>nil</code> instead of <code>NONE</code>, so my question is this:
+Is there a way to get <code>nil</code> out of <code>select-any</code> and still being more efficient than <code>select-first</code>? or not? or for this kind of selector it doesn&apos;t really matter?</z><z id="t1693466738" t="xificurC it&apos;s just an extra identical? check, I wouldn&apos;t worry about it https://github.com/redplanetlabs/specter/blob/67e86806020b9d02fbca8cdb1efad3002fc81a32/src/clj/com/rpl/specter/impl.cljc#L418"><y>#</y><d>2023-08-31</d><h>07:25</h><r>xificurC</r>it&apos;s just an extra <code>identical?</code> check, I wouldn&apos;t worry about it <a href="https://github.com/redplanetlabs/specter/blob/67e86806020b9d02fbca8cdb1efad3002fc81a32/src/clj/com/rpl/specter/impl.cljc#L418" target="_blank">https://github.com/redplanetlabs/specter/blob/67e86806020b9d02fbca8cdb1efad3002fc81a32/src/clj/com/rpl/specter/impl.cljc#L418</a></z><z id="t1693467189" t="Lidor Cohen That&apos;s what I thought ☺️ Thank you very much for the extra mile of checking the code for me 🙏"><y>#</y><d>2023-08-31</d><h>07:33</h><r>Lidor Cohen</r>That&apos;s what I thought <b>☺️</b>
+Thank you very much for the extra mile of checking the code for me <b>🙏</b></z><z id="t1697415069" t="steveb8n random thought: Cursorless is pretty much Specter “transform” https://www.youtube.com/watch?v=NcUJnmBqHTY"><y>#</y><d>2023-10-16</d><h>00:11</h><w>steveb8n</w>random thought: Cursorless is pretty much Specter “transform” <a href="https://www.youtube.com/watch?v=NcUJnmBqHTY" target="_blank">https://www.youtube.com/watch?v=NcUJnmBqHTY</a></z><z id="t1697415116" t="steveb8n it has exactly the same separation of composable navigators and actions to perform on the nav result"><y>#</y><d>2023-10-16</d><h>00:11</h><w>steveb8n</w>it has exactly the same separation of composable navigators and actions to perform on the nav result</z><z id="t1699055153" t="Felix Dorner This lists all the planet names, but is there something even better? (This is my first night with specter and yes… this looks like a game changer) (let [universe {:galaxies [{:name &quot;g1&quot; :planets [ {:name &quot;Earth&quot;} {:name &quot;Pluto&quot; }] } {:name &quot;g2&quot; :planets [ {:name &quot;Krypton&quot;} {:name &quot;Tatooine&quot;}] }]}] (select [(keypath :galaxies) ALL (keypath :planets) ALL (keypath :name)] universe))"><y>#</y><d>2023-11-03</d><h>23:45</h><w>Felix Dorner</w>This lists all the planet names, but is there something even better? (This is my first night with specter and yes… this looks like a game changer)
+<pre>(let [universe {:galaxies [{:name &quot;g1&quot; :planets [ {:name &quot;Earth&quot;} {:name &quot;Pluto&quot; }] }
+                           {:name &quot;g2&quot; :planets [ {:name &quot;Krypton&quot;} {:name &quot;Tatooine&quot;}] }]}]
+  (select [(keypath :galaxies) ALL (keypath :planets) ALL (keypath :name)] universe))</pre></z><z id="t1699061374" t="nathanmarz [:attrs {:href &quot;/_/_/users/U05KWT468F8&quot;}] (select [:galaxies ALL :planets ALL :name] universe)"><y>#</y><d>2023-11-04</d><h>01:29</h><w>nathanmarz</w><a>@felix.dorner</a> <code>(select [:galaxies ALL :planets ALL :name] universe)</code></z><z id="t1699061384" t="nathanmarz that&apos;s the same thing, just more concise"><y>#</y><d>2023-11-04</d><h>01:29</h><w>nathanmarz</w>that&apos;s the same thing, just more concise</z><z id="t1699061391" t="nathanmarz same performance"><y>#</y><d>2023-11-04</d><h>01:29</h><w>nathanmarz</w>same performance</z><z id="t1700039886" t="Lidor Cohen Hello 👋 I&apos;m using specter to transform an ordered-map : (sp/setval [sp/ALL (sp/selected? sp/LAST (sp/must :display) (sp/pred= :none))] sp/NONE some-ordered-map) and I get back a hashmap. what can I do to make specter preserve? the structure type? is there any specific protocol I can implement that will solve this?"><y>#</y><d>2023-11-15</d><h>09:18</h><w>Lidor Cohen</w>Hello <b>👋</b>
+
+I&apos;m using specter to transform an <code>ordered-map</code> :
+<pre>(sp/setval [sp/ALL (sp/selected? sp/LAST (sp/must :display) (sp/pred= :none))]
+             sp/NONE
+             some-ordered-map)</pre>
+and I get back a hashmap.
+
+what can I do to make specter preserve? the structure type? is there any specific protocol I can implement that will solve this?</z><z id="t1700042065" t="Lidor Cohen NVM it was some blunder on my side. specter indeed returns ordered-map 🙂"><y>#</y><d>2023-11-15</d><h>09:54</h><r>Lidor Cohen</r>NVM it was some blunder on my side. specter indeed returns ordered-map <b>🙂</b></z></g></div></body>
