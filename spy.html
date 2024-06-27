@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<head>
+    <title>spy</title>
+    <meta charset="UTF-8">
+</head>
+
+<style type="text/css">
+    body {line-height: 1.5}
+    #reconnect {position: fixed; top:10px; right:10px}
+
+    details {margin-bottom: 10px}
+    summary {cursor: pointer; background-color: #cdffee;}
+
+    #spy {white-space: pre; color: lightslategrey}
+    table {border-spacing: 0; border-collapse: collapse}
+
+    map:hover {outline: 1px solid lightpink}
+    seq:hover {outline: 1px solid gold}
+    summary pre {margin: 0; display: inline-block; background: aliceblue;}
+</style>
+
+<button id="reconnect" onclick="connect()">reconnect</button>
+
+<div id="spy"></div>
+<textarea id="paste" rows=20 cols=100 placeholder="paste EDN here"></textarea>
+<button onclick="paste()">paste</button>
+
+<script>
+    let WS;
+    let WSURL;
+
+    new URLSearchParams(location.search).entries().forEach(
+        (kv)=> {
+            if (kv[0] === 'socketurl') {
+                WSURL = kv[1];
+            }
+        }
+    )
+    console.log(WSURL)
+
+    function connect() {
+        if (WS) {
+            WS.close();
+        }
+        if (WSURL) {
+            WS = new WebSocket(WSURL);
+            // console.log(WS);
+            WS.onopen = onopen;
+            WS.onclose = onclose;
+            WS.onmessage = onmessage;
+        }
+    }
+
+    let all = document.getElementById("spy");
+
+    function onopen    (e) {
+        console.warn('connected');
+        details(null, "connected");
+        document.getElementById('reconnect').setAttribute('style', 'display:none')
+    }
+    function onclose   (e) {
+        console.error('disconnected');
+        details(null, "disconnected");
+        document.getElementById('reconnect').setAttribute('style', 'display:block')
+    }
+
+    function onmessage (e) {
+        details(null, 'from socket', astToDom(ednToAst(e.data)))
+    }
+    connect();
+
+    function pretty(x) {return JSON.stringify(x, null, 2)}
+
+    function ednToAst (str) {
+
+        let idx, ch, mode;
+        let modes = ["coll"];
+        let stack = []
+        let now  = {type: 'root', kids: []}
+        let word = ''
+
+        function debug() {
+            console.log([str.substring(0, idx), idx, str.substring(idx, idx+20)])
+            console.log([ch, word, JSON.stringify(modes)])
+            console.log(pretty(stack))
+            console.log(pretty(now))
+        }
+
+        function close() {
+            modes.pop();
+            let parent = stack.pop();
+            parent.kids.push(now);
+            now = parent;
+
+            if (now.type==='tag' && now.kids.length===2) {
+                close()
+            }
+        }
+
+        for (idx=0; idx<str.length; idx++) {
+            ch = str[idx];
+            mode = modes.at(-1);
+            // debug()
+
+            switch (mode) {
+                case 'coll':
+                    if (ch.match(/\s/) || ch===',') {
+                        //skip whitespace
+                    } else if (ch===')' || ch==='}' || ch===']') {
+                        close();
+                    } else {
+                        stack.push(now);
+
+                        if (now.type==='tag') {
+                           word+=ch;
+                        } else {
+                            word=ch;
+                        }
+
+                        if (ch.match(/\d/))  {modes.push('word'); now={type: 'num'};
+                        } else if (ch===':') {modes.push('word'); now={type: 'kw'};
+                        } else if (ch==='"') {modes.push('str');  now={type: 'str'};
+                        } else if (ch==='#') {modes.push('#');
+                        } else if (ch==='{') {modes.push('coll'); now={type: "map", kids: []}
+                        } else if (ch==='[') {modes.push('coll'); now={type: "vec", kids: []}
+                        } else if (ch==='(') {modes.push('coll'); now={type: "list", kids: []}
+                        } else               {modes.push("word"); now={type: 'word'}
+                        }
+                    } break;
+
+                case '#':
+                    modes.pop();
+                    switch (ch) {
+                        case '{': modes.push("coll"); now={type: "set", kids: []}; break;
+                        case '"': modes.push("str");  now={type: "re"};  word+=ch; break;
+                        case '#': modes.push("word"); now={type: "lit"}; word+=ch; break;
+                        default:  modes.push("coll"); now={type: "tag", kids: []}; word+=ch; break;
+                    } break;
+
+                case 'str':
+                    switch (ch) {
+                        //todo?     (replace "\"" "&quot;")
+                        case '\\': word+=ch; modes.push('esc'); break;
+                        case '"':  word+=ch; now.word=word; close(); break;
+                        case '&':  word+='&amp;'; break;
+                        case '<':  word+='&lt;'; break;
+                        case '>':  word+='&gt;'; break;
+                        case "'":  word+='&apos;'; break;
+                        default:   word+=ch;
+                    } break;
+
+                case 'esc':
+                    word+=ch;
+                    modes.pop();
+                    break;
+
+                case 'word':
+                    if (ch==='\\'||ch==='"'||ch===')'||ch==='}'||ch===']'||ch==='('||ch==='{'||ch==='['||ch.match(/\s/)||ch===',') {
+                        now.word = word;
+                        word=''
+                        if (now.type==='word') {
+                            switch (now.word) {
+                                case 'false': now.type='lit'; break;
+                                case 'true':  now.type='lit'; break;
+                                case 'nil': now.type='lit'; break;
+                                default:
+                                    if (now.word.match(/^[+-]?\d+M?$/)) {
+                                        now.type='num';
+                                    }
+                                    else {
+                                        now.type='sym';
+                                    }
+                            }
+                        }
+                        close();
+                        idx--;
+                    } else {
+                        word+=ch;
+                    }
+                    break;
+
+                default: console.error("unknown mode kek", mode);
+            }
+
+            if (!mode) {
+                break;
+            }
+        } //for
+        // debug();
+        return now.kids[0];
+    }
+
+    let nextState = {"row":"col", "col":"non", "non":"row", "one": "no1", "no1": "one"}
+
+    function xpath(node) {
+        switch (node.parentNode.tagName) {
+            case 'STR': return xpath(node.parentNode) + '/' + node.tagName;
+            case 'SEQ': return xpath(node.parentNode) + '/' + node.tagName;
+            case 'MAP': return xpath(node.parentNode) + '/' + node.tagName;
+            case 'VS':  return xpath(node.parentNode) + '/' + node.tagName;
+            case 'KEY': return xpath(node.parentNode.parentNode) + '/key[@t="'+ node.parentNode.getAttribute('t') + '"]/'+ node.tagName;
+            case 'KVS': return xpath(node.parentNode) + '/key[@t="' + node.previousSibling.getAttribute('t') + '"]/following-sibling::' + node.tagName + '[1]';
+            case 'DETAILS': return "//details/" + node.tagName;
+        }
+    }
+
+    function seqClick (node, event) {
+        let x = node.getAttribute('x-state');
+        let y = nextState[x];
+        let scope = node.parentNode;
+        let selector = ':scope > tog';
+
+        if (event.altKey) {
+            let path = xpath(node);
+            // console.log(path);
+            let els = document.evaluate(path, document);
+            let el = els.iterateNext();
+            let nodes = []
+            while (el) {
+                nodes.push(el);
+                el = els.iterateNext();
+            }
+            for (let i = 0; i < nodes.length; i++) {
+                nodes[i].setAttribute('x-state', y)
+            }
+
+            return;
+
+        } else if (event.metaKey) {
+            // console.log('xpath', xpath(node));
+
+            //  TOG < SEQ|MAP < VS:
+            if (node.parentNode?.parentNode?.tagName === 'VS') {
+            scope = node.parentNode.parentNode; // VS
+            selector = ':scope > * > tog'; // toggle each sibling
+
+            //  TOG < SEQ|MAP < KEY:
+            } else if (node.parentNode?.parentNode?.tagName === 'KEY') {
+                scope = node.parentNode.parentNode.parentNode; // KVS
+                selector = ':scope > *:nth-child(2n+1) > * > tog'; // toggle each key
+
+            //  TOG < SEQ|MAP < KVS:
+            } else if (node.parentNode?.parentNode?.tagName === 'KVS') {
+                scope = node.parentNode.parentNode; // KVS
+                selector = ':scope > *:nth-child(2n) > tog'; // toggle each val
+            }
+        }
+
+        // console.log(y, selector, scope, scope.querySelectorAll(selector));
+        scope.querySelectorAll(selector).forEach((el) => el.setAttribute('x-state', y));
+    }
+
+    function seq(left, x, right) {
+        if (x.kids.length === 0) {
+            return gray(left+right)
+        }
+
+        let res = ''
+
+        let init;
+        if (x.kids.length === 1) {
+            init = 'one'
+        } else {
+            init = 'row'
+        }
+
+        res += "<seq>"
+        res += '<tog x-state="'+init+'" onclick="seqClick(this, event)">' + left + '</tog>'
+        res += '<vs>'
+
+        for (let i=0;i<x.kids.length;i++) {
+            res += astToDom(x.kids[i])
+        }
+        res += '</vs>'
+        res += '<tog x-state="'+init+'" onclick="seqClick(this, event)">' + right + '</tog>'
+        res += "</seq>"
+        return res;
+    }
+
+    function map(x) {
+        if (x.kids.length === 0) {
+            return gray('{}')
+        }
+
+        let res = ''
+
+        let init;
+        if (x.kids.length === 2) {
+            init = 'one'
+        } else {
+            init = 'col'
+        }
+
+        res += "<map>"
+        res += '<tog x-state="'+init+'" onclick="seqClick(this, event)">{</tog>'
+
+        res += '<kvs>'
+        for (let i=0;i<x.kids.length;i++) {
+            let k = x.kids[i];
+            res += key(astToDom(k), getT(k));
+            i++
+            res += astToDom(x.kids[i]);
+        }
+        res += '</kvs>'
+        res += '<tog x-state="'+init+'" onclick="seqClick(this, event)">}</tog>'
+        res += "</map>"
+        return res;
+    }
+
+    function getT (x){
+        if (x.word) {
+            return x.word;
+        } else {
+            let t = '';
+            for (let i=0;i<x.kids.length;i++){
+                t += getT(x.kids[i]) + ' '
+            }
+            switch (x.type) {
+                case 'map': return "{"+t+"}";
+                case 'vec': return "["+t+"]";
+                case 'list': return "("+t+")";
+                case 'set': return "#{"+t+"}";
+                case 'tag': return t;
+            }
+        }
+    }
+    function rgba(s) {
+        let RGBA = [];
+
+        let rgba2 = s.match(/^"#([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})?"$/)
+        rgba2?.slice(1).forEach((x)=>{RGBA.push(parseInt(x?x:'FF', 16))});
+
+        if (RGBA.length) {return RGBA}
+
+        let rgba1 = s.match(/^"#([0-9a-fA-F]{1})([0-9a-fA-F]{1})([0-9a-fA-F]{1})([0-9a-fA-F]{1})?"$/)
+        rgba1?.slice(1).forEach((x)=>{RGBA.push(parseInt(x?x+x:'FF', 16))});
+
+        return RGBA
+    }
+
+    function color (RGBA) {
+        // RGBA.map((c) => {
+        //     c = c / 255.0
+        //     return c <= 0.04045 ? (c / 12.92) : ((c+0.055)/1.055) ^ 2.4
+        // })
+
+        let [R, G, B, A] = RGBA;
+
+        // let L = 0.2126 * R + 0.7152 * G + 0.0722 * B
+        // return L > 0.179 ? "#000" : "#fff"
+
+        const brightness = R * 0.299 + G * 0.587 + B * 0.114 + (1-A) * 255;
+        return brightness > 186 ? "#000" : "#FFF"
+    }
+
+    function str(s) {
+        let RGBA = rgba(s);
+        // console.log(s, RGBA)
+        if (RGBA?.length) {
+            let bg = s.substring(1, s.length-1);
+            let c = color(RGBA)
+            return '<span style="color:'+c+';background-color: '+ bg +'">'+s+'</span>';
+        } else if (s.length > 38) { // "uuid"
+            return '<str>'
+                 + '<tog x-state="row" onclick="seqClick(this, event)">"</tog>'
+                 + '<txt>' + s + '</txt>'
+                 + '</str>'
+        } else {
+            return bblack(s);
+        }
+    }
+
+    function astToDom (ast) {
+        let w = ast.word;
+        switch (ast.type) {
+            case 'lit': return mage(w)
+            case 'str': return str(w)
+            case 'num': return blue(w)
+            case 'kw':  return green(w)
+            case 're':  return gray(w)
+            case 'sym': return red(w)
+            case 'tag': return rred(row(rred(ast.kids[0].word) + astToDom(ast.kids[1])));
+            case 'vec': return seq('[', ast, ']');
+            case 'set': return seq('#{', ast, '}');
+            case 'list': return seq('(', ast, ')');
+            case 'map': return map(ast);
+        }
+    }
+
+    function ib(x) {return '<ib>'+x+'</ib>'}
+    function td(x) {return '<td>'+x+'</td>'}
+    function tr(x) {return '<tr>'+x+'</tr>'}
+    function col(x) {return '<col>'+x+'</col>'}
+    function row(x) {return '<row>'+x+'</row>'}
+    function div(x) {return '<div>'+x+'</div>'}
+
+    function green(x) {return '<gg>'+x+'</gg>'}
+    function gray(x) {return '<gr>'+x+'</gr>'}
+    function blue(x) {return '<bb>'+x+'</bb>'}
+    function black(x) {return '<bl>'+x+'</bl>'}
+    function bblack(x) {return '<bbl>'+x+'</bbl>'}
+    function red(x) {return '<rr>'+x+'</rr>'}
+    function rred(x) {return '<rrr>'+x+'</rrr>'}
+    function mage(x) {return '<mm>'+x+'</mm>'}
+    function cyan(x) {return '<cc>'+x+'</cc>'}
+    function key(x, t) {return '<key t="'+ escape(t)+'">'+ x +'</key>'}
+    // function val(x, t) {return '<key t="'+ escape(t)+'">'+ x +'</key>'}
+
+    function details(color, summary, body) {
+        let div = document.createElement('DIV')
+        all.append(div);
+        div.innerHTML = '<details open><summary>'+ new Date() + ' '+ summary +'</summary>' + body + '</details>'
+    }
+    function paste() {
+        let input = document.getElementById('paste')
+        let text = input.value;
+        details(null, 'paste', astToDom(ednToAst(text)))
+        input.value = '';
+    }
+</script>
+
+<style>
+    * {height: fit-content; width: fit-content}
+    body {
+        padding-bottom: 50vh;
+        font: 15px/1.5 BlinkMacSystemFont, -apple-system, “Segoe UI”, Roboto, Helvetica, Arial, sans-serif;
+        font-family: monospace;
+    }
+
+    gg  {display: inline-block; color: forestgreen}
+    gr  {display: inline-block; color: lightslategrey}
+    bb  {display: inline-block; color: dodgerblue}
+    bl  {display: inline-block; color: black}
+    bbl {display: inline-block; color: black; background-color: #f8f8f8}
+    rr  {display: inline-block; color: orangered}
+    rrr {display: inline-block; color: orangered; background-color: #ffeeee}
+    mm  {display: inline-block; color: magenta}
+    cc  {display: inline-block; color: cyan}
+    ib  {display: inline-block}
+    row {display: flex; flex-direction: row;}
+    col {display: flex; flex-direction: column}
+    tog {display:inline-block; cursor: pointer; color: lightslategrey}
+    tog:hover {background-color: black; color: white}
+    si  {display: inline}/*seq-item*/
+
+    seq, map {display: inline-flex; flex-direction: row;}
+
+    vs > * {margin-right: 10px}
+    vs > *:last-child {margin-right: 0px}
+
+    seq:has(> tog[x-state='col']) > vs > * {margin-right: 0px}
+
+    seq:has(> tog[x-state='one']) > vs,
+    seq:has(> tog[x-state='row']) > vs {display: inline-flex; flex-direction: row}
+    seq:has(> tog[x-state='col']) > vs {display: inline-flex; flex-direction: column;}
+
+    /*collapse:*/
+    seq:has(> tog[x-state='no1']) > vs,
+    seq:has(> tog[x-state='non']) > vs,
+    map:has(> tog[x-state='no1']) > kvs,
+    map:has(> tog[x-state='non']) > kvs
+    {height: 0.1px;width: 0.1px; overflow-x: hidden; margin-left: 0px; margin-right: 0px; display: inline-block;}
+
+    tog[x-state='no1']:first-child,
+    tog[x-state='no1']:last-child,
+    tog[x-state='non']:first-child,
+    tog[x-state='non']:last-child
+    /*{height: unset; color:white !important; background-color: black !important; display: initial; width: unset; overflow-x: unset}*/
+    {color:white !important; background-color: black !important;}
+
+    map > kvs > *:nth-child(2n) {margin-left: 10px}
+    tog:last-child {align-self: end}
+
+    map:has(> tog[x-state='one']) > kvs,
+    map:has(> tog[x-state='row']) > kvs {display: inline-flex; flex-direction: row}
+    map:has(> tog[x-state='row']) > kvs > * {margin-left: 10px}
+    map:has(> tog[x-state='row']) > kvs > *:first-child {margin-left: 0px}
+    map:has(> tog[x-state='col']) > kvs {display: inline-grid; grid-template-columns: auto auto}
+
+
+    /*to avoid space between " and 1st char on copy:*/
+    str {position: relative}
+    str > tog {position: absolute; top:0; left: 0; user-select: none}
+    /*txt {word-break: break-word}*/
+    str, txt {display: inline-block; vertical-align: top; text-wrap: initial}
+    str, str > tog, txt {background-color: #EEEEEE; color: #000}
+    str:has(> tog[x-state='col']) > txt {max-width: 335px;}
+    str:has(> tog[x-state='row']) > txt {white-space: nowrap;}
+    str:has(> tog[x-state='non']) > txt {width: 335px; white-space: nowrap; overflow-x: hidden; text-overflow: ellipsis;}
+
+</style>
