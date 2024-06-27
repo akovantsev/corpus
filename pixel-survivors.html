@@ -6,10 +6,10 @@
     <style>
         #contaiter {width:100vw; height:100vh; display:flex; flex-direction:column}
         .stat {display:block; margin-left:auto; margin-right:auto;}
-        #canvas {margin:auto; border:1px solid black;}
+        #canvas {margin:0 auto; border:1px solid black;}
         .big {font-size: 300px;opacity: 0.666; position: fixed; top: 0; width: 100%; text-align: center; height: 100%;display: flex;}
-        #dead{color: red;}
-        #paused{color: mediumslateblue;}
+        #dead{pointer-events: none; color: red;}
+        #paused{pointer-events: none; color: mediumslateblue;}
         #dead div {margin:auto}
         #paused div {margin:auto}
         .hidden div {display: none}
@@ -18,6 +18,7 @@
 <body style="margin:0">
 
 <div id="contaiter">
+    <b class="stat">v1</b>
     <b class="stat" id="frames_so_far">count</b>
     <b class="stat" id="enemy-spawn-rate"></b>
     <b class="stat" id="enemies">enemies: 0</b>
@@ -104,6 +105,7 @@
         weapon_plus_range = 3;
         weapon_plus_frames = 1;
         enemy_spawn_rate_cur = 100;
+        document.getElementById("frags").innerText = "frags: " + frags;
         document.getElementById("enemy-spawn-rate").innerText = "spawn rate: " + enemy_spawn_rate_cur;
         weapStats();
     }
@@ -123,7 +125,7 @@
 
     function getDirK(e) {
         // console.log(e.code)
-        if (e.code === "KeyA" || e.code === "ArrowLeft")  {return "L";}
+             if (e.code === "KeyA" || e.code === "ArrowLeft")  {return "L";}
         else if (e.code === "KeyD" || e.code === "ArrowRight") {return "R";}
         else if (e.code === "KeyW" || e.code === "ArrowUp")    {return "U";}
         else if (e.code === "KeyS" || e.code === "ArrowDown")  {return "D";}
@@ -165,7 +167,6 @@
                 paused = true;
                 dead = true;
                 DEAD.setAttribute("class", "big");
-                console.error("dead");
                 break;
             }
         }
@@ -277,7 +278,7 @@
 
             if (render_plus_weapon) {
                 ctx.fillStyle = "#DA70D6AA"
-                let width = (scale*(1 + weapon_plus_range + weapon_plus_range));
+                let width = scale * (1 + weapon_plus_range + weapon_plus_range);
                 let length = scale * weapon_plus_range;
                 ctx.fillRect(player_x-length, player_y, width, scale);
                 ctx.fillRect(player_x, player_y-length, scale, width);
