@@ -65,11 +65,118 @@
     }
 
     function onmessage (e) {
-        details(null, 'from socket', astToDom(ednToAst(e.data)))
+        details(null, 'from socket', astToDom(strToAst(e.data)))
     }
     connect();
 
     function pretty(x) {return JSON.stringify(x, null, 2)}
+
+    function isJson(s) {return s.includes("\":")}
+
+    function strToAst(s) {
+        if (isJson(s)) {
+            return jsonToAst(s);
+        } else {
+            return ednToAst(s);
+        }
+    }
+
+    function jsonToAst(str) {
+        let idx, ch, mode;
+        let modes = ["coll"];
+        let stack = []
+        let now  = {type: 'root', kids: []}
+        let word = ''
+
+        function debug() {
+            console.log([str.substring(0, idx), idx, str.substring(idx, idx+20)])
+            console.log([ch, word, JSON.stringify(modes)])
+            console.log(pretty(stack))
+            console.log(pretty(now))
+        }
+
+        function close() {
+            modes.pop();
+            let parent = stack.pop();
+            parent.kids.push(now);
+            now = parent;
+        }
+
+        for (idx=0; idx<str.length; idx++) {
+            ch = str[idx];
+            mode = modes.at(-1);
+            // debug()
+
+            switch (mode) {
+                case 'coll':
+                    if (ch.match(/\s/) || ch===',' || ch===':') {
+                        //skip whitespace
+                    } else if (ch==='}' || ch===']') {
+                        close();
+                    } else {
+                        stack.push(now);
+                        word=ch;
+
+                        if (ch.match(/\d/))  {modes.push('word'); now={type: 'num'};
+                        } else if (ch==='"') {modes.push('str');  now={type: 'str'};
+                        } else if (ch==='{') {modes.push('coll'); now={type: "map", kids: []}
+                        } else if (ch==='[') {modes.push('coll'); now={type: "vec", kids: []}
+                        } else               {modes.push("word"); now={type: 'word'}
+                        }
+                    } break;
+
+                case 'str':
+                    switch (ch) {
+                        //todo?     (replace "\"" "&quot;")
+                        case '\\': word+=ch; modes.push('esc'); break;
+                        case '"':  word+=ch; now.word=word; close(); break;
+                        case '&':  word+='&amp;'; break;
+                        case '<':  word+='&lt;'; break;
+                        case '>':  word+='&gt;'; break;
+                        case "'":  word+='&apos;'; break;
+                        default:   word+=ch;
+                    } break;
+
+                case 'esc':
+                    word+=ch;
+                    modes.pop();
+                    break;
+
+                case 'word':
+                    if (ch==='\\'||ch==='"'||ch==='}'||ch===']'||ch==='{'||ch==='['||ch.match(/\s/)||ch===','||ch===':') {
+                        now.word = word;
+                        word=''
+                        if (now.type==='word') {
+                            switch (now.word) {
+                                case 'false': now.type='lit'; break;
+                                case 'true':  now.type='lit'; break;
+                                case 'null': now.type='lit'; break;
+                                default:
+                                    if (now.word.match(/^[+-]?\d+M?$/)) {
+                                        now.type='num';
+                                    }
+                                    else {
+                                        now.type='sym';
+                                    }
+                            }
+                        }
+                        close();
+                        idx--;
+                    } else {
+                        word+=ch;
+                    }
+                    break;
+
+                default: console.error("unknown mode kek", mode);
+            }
+
+            if (!mode) {
+                break;
+            }
+        } //for
+        // debug();
+        return now.kids[0];
+    }
 
     function ednToAst (str) {
 
@@ -414,7 +521,7 @@
     function paste() {
         let input = document.getElementById('paste')
         let text = input.value;
-        details(null, 'paste', astToDom(ednToAst(text)))
+        details(null, 'paste', astToDom(strToAst(text)))
         input.value = '';
     }
 </script>
@@ -484,7 +591,7 @@
     /*txt {word-break: break-word}*/
     str, txt {display: inline-block; vertical-align: top; text-wrap: initial}
     str, str > tog, txt {background-color: #EEEEEE; color: #000}
-    str:has(> tog[x-state='col']) > txt {max-width: 335px;}
+    str:has(> tog[x-state='col']) > txt {max-width: 335px; overflow-wrap: anywhere;}
     str:has(> tog[x-state='row']) > txt {white-space: nowrap;}
     str:has(> tog[x-state='non']) > txt {width: 335px; white-space: nowrap; overflow-x: hidden; text-overflow: ellipsis;}
 
