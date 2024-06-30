@@ -74,10 +74,23 @@
     function isJson(s) {return s.includes("\":")}
 
     function strToAst(s) {
-        if (isJson(s)) {
-            return jsonToAst(s);
-        } else {
-            return ednToAst(s);
+        try {
+            if (isJson(s)) {
+                try {
+                    return jsonToAst(s);
+                } catch (Error) {
+                    return ednToAst(s);
+                }
+            } else {
+                try {
+                    return ednToAst(s);
+                } catch (Error) {
+                    return jsonToAst(s);
+                }
+            }
+        } catch (Error) {
+            log.error("cant parse:")
+            log.log(s)
         }
     }
 
