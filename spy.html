@@ -89,8 +89,8 @@
                 }
             }
         } catch (Error) {
-            log.error("cant parse:")
-            log.log(s)
+            console.error("cant parse:")
+            console.log(s)
         }
     }
 
@@ -100,13 +100,6 @@
         let stack = []
         let now  = {type: 'root', kids: []}
         let word = ''
-
-        function debug() {
-            console.log([str.substring(0, idx), idx, str.substring(idx, idx+20)])
-            console.log([ch, word, JSON.stringify(modes)])
-            console.log(pretty(stack))
-            console.log(pretty(now))
-        }
 
         function close() {
             modes.pop();
