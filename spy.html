@@ -74,7 +74,7 @@
     async function pip() {
         let w = await window.documentPictureInPicture.requestWindow();
         let spy = document.createElement('IFRAME');
-        spy.setAttribute('src', '/spy/');
+        spy.setAttribute('src', '.');
         spy.height='100%'
         spy.width='100%'
         w.document.body.append(spy);
