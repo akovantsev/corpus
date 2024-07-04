@@ -7,6 +7,7 @@
 <style type="text/css">
     body {line-height: 1.5}
     #reconnect {position: fixed; top:10px; right:10px}
+    #pip {position: fixed; top:10px; left: 10px}
 
     details {margin-bottom: 10px}
     summary {cursor: pointer; background-color: #cdffee;}
@@ -24,6 +25,7 @@
 <div id="spy"></div>
 <textarea id="paste" rows=20 cols=100 placeholder="paste EDN here"></textarea>
 <button onclick="paste()">paste</button>
+<button id="pip" onclick="pip()">popout</button>
 
 <script>
     let WS;
@@ -68,6 +70,16 @@
         details(null, 'from socket', astToDom(strToAst(e.data)))
     }
     connect();
+
+    async function pip() {
+        let w = await window.documentPictureInPicture.requestWindow();
+        let spy = document.createElement('IFRAME');
+        spy.setAttribute('src', '/spy/');
+        spy.height='100%'
+        spy.width='100%'
+        w.document.body.append(spy);
+        w.document.body.setAttribute('style', 'overflow:hidden; margin: 0')
+    }
 
     function pretty(x) {return JSON.stringify(x, null, 2)}
 
