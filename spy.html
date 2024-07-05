@@ -7,7 +7,7 @@
 <style type="text/css">
     body {line-height: 1.5}
     #reconnect {position: fixed; top:10px; right:10px}
-    #pip {position: fixed; top:10px; left: 10px}
+    #buttons {position: fixed; top:10px; left: 10px}
 
     details {margin-bottom: 10px}
     summary {cursor: pointer; background-color: #cdffee;}
@@ -22,10 +22,16 @@
 
 <button id="reconnect" onclick="connect()">reconnect</button>
 
+<div id="buttons">
+    <button onclick="pip()">popout</button>
+    <button onclick="closeAll()">close all</button>
+    <button onclick="openAll()">open all</button>
+</div>
+
+
 <div id="spy"></div>
 <textarea id="paste" rows=20 cols=100 placeholder="paste EDN here"></textarea>
 <button onclick="paste()">paste</button>
-<button id="pip" onclick="pip()">popout</button>
 
 <script>
     let WS;
@@ -67,44 +73,24 @@
     }
 
     function onmessage (e) {
-        details(null, 'from socket', astToDom(strToAst(e.data)))
+        details(null, 'from socket', render(e.data));
     }
     connect();
 
     async function pip() {
         let w = await window.documentPictureInPicture.requestWindow();
         let spy = document.createElement('IFRAME');
-        spy.setAttribute('src', '.');
+        spy.setAttribute('src', location.pathname+location.search);
         spy.height='100%'
         spy.width='100%'
-        w.document.body.append(spy);
+        w.document.body.append(spy)
         w.document.body.setAttribute('style', 'overflow:hidden; margin: 0')
     }
 
+    function closeAll() {document.querySelectorAll('details').forEach((e)=>{e.removeAttribute('open')})}
+    function openAll()  {document.querySelectorAll('details').forEach((e)=>{e.setAttribute('open', "1")})}
+
     function pretty(x) {return JSON.stringify(x, null, 2)}
-
-    function isJson(s) {return s.includes("\":")}
-
-    function strToAst(s) {
-        try {
-            if (isJson(s)) {
-                try {
-                    return jsonToAst(s);
-                } catch (Error) {
-                    return ednToAst(s);
-                }
-            } else {
-                try {
-                    return ednToAst(s);
-                } catch (Error) {
-                    return jsonToAst(s);
-                }
-            }
-        } catch (Error) {
-            console.error("cant parse:")
-            console.log(s)
-        }
-    }
 
     function jsonToAst(str) {
         let idx, ch, mode;
@@ -474,7 +460,7 @@
         // let L = 0.2126 * R + 0.7152 * G + 0.0722 * B
         // return L > 0.179 ? "#000" : "#fff"
 
-        const brightness = R * 0.299 + G * 0.587 + B * 0.114 + (1-A) * 255;
+        const brightness = R * 0.299 + G * 0.587 + B * 0.114;// + (1-A) * 255;
         return brightness > 186 ? "#000" : "#FFF"
     }
 
@@ -484,7 +470,7 @@
         if (RGBA?.length) {
             let bg = s.substring(1, s.length-1);
             let c = color(RGBA)
-            return '<span style="color:'+c+';background-color: '+ bg +'">'+s+'</span>';
+            return '<color style="color:'+c+';background-color: '+ bg +'">'+s+'</color>';
         } else if (s.length > 38) { // "uuid"
             return '<str>'
                  + '<tog x-state="row" onclick="seqClick(this, event)">"</tog>'
@@ -534,12 +520,26 @@
     function details(color, summary, body) {
         let div = document.createElement('DIV')
         all.append(div);
-        div.innerHTML = '<details open><summary>'+ new Date() + ' '+ summary +'</summary>' + body + '</details>'
+        div.innerHTML = '<details><summary>'+ new Date() + ' '+ summary +'</summary>' + body + '</details>'
+    }
+    function render(s) {
+        try {
+            JSON.parse(s)
+            return astToDom(jsonToAst(s));
+        } catch (Error) {
+            try {
+                return astToDom(ednToAst(s));
+            } catch (Error) {
+                console.error("cant parse:")
+                console.log(s)
+                return s;
+            }
+        }
     }
     function paste() {
         let input = document.getElementById('paste')
         let text = input.value;
-        details(null, 'paste', astToDom(strToAst(text)))
+        details(null, 'paste', render(text));
         input.value = '';
     }
 </script>
@@ -552,6 +552,7 @@
         font-family: monospace;
     }
 
+    color {display: inline-block; outline: 1px solid black}
     gg  {display: inline-block; color: forestgreen}
     gr  {display: inline-block; color: lightslategrey}
     bb  {display: inline-block; color: dodgerblue}
