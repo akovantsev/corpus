@@ -26,6 +26,7 @@
     <button onclick="pip()">popout</button>
     <button onclick="closeAll()">close all</button>
     <button onclick="openAll()">open all</button>
+    <button onclick="clearAll()">clear all</button>
 </div>
 
 
@@ -89,7 +90,7 @@
 
     function closeAll() {document.querySelectorAll('details').forEach((e)=>{e.removeAttribute('open')})}
     function openAll()  {document.querySelectorAll('details').forEach((e)=>{e.setAttribute('open', "1")})}
-
+    function clearAll() {document.getElementById('spy').innerHTML = ""}
     function pretty(x) {return JSON.stringify(x, null, 2)}
 
     function jsonToAst(str) {
@@ -244,6 +245,8 @@
                     switch (ch) {
                         case '{': modes.push("coll"); now={type: "set", kids: []}; break;
                         case '"': modes.push("str");  now={type: "re"};  word+=ch; break;
+                        case ":": modes.push("word"); now={type: "kw"}; word+=ch; break;
+                        case "'": modes.push("word"); now={type: "sym"}; word+=ch; break;
                         case '#': modes.push("word"); now={type: "lit"}; word+=ch; break;
                         default:  modes.push("coll"); now={type: "tag", kids: []}; word+=ch; break;
                     } break;
@@ -277,8 +280,9 @@
                                 default:
                                     if (now.word.match(/^[+-]?\d+M?$/)) {
                                         now.type='num';
-                                    }
-                                    else {
+                                    } else if (now.word.startsWith("\\")) {
+                                        now.type='lit'; // chars
+                                    } else {
                                         now.type='sym';
                                     }
                             }
@@ -301,7 +305,7 @@
         return now.kids[0];
     }
 
-    let nextState = {"row":"col", "col":"non", "non":"row", "one": "no1", "no1": "one"}
+    let nextState = {"row":"col", "col":"non", "non":"row"}
 
     function xpath(node) {
         switch (node.parentNode.tagName) {
@@ -367,23 +371,15 @@
         }
 
         let res = ''
-
-        let init;
-        if (x.kids.length === 1) {
-            init = 'one'
-        } else {
-            init = 'row'
-        }
-
         res += "<seq>"
-        res += '<tog x-state="'+init+'" onclick="seqClick(this, event)">' + left + '</tog>'
+        res += '<tog x-state="row" onclick="seqClick(this, event)">' + left + '</tog>'
         res += '<vs>'
 
         for (let i=0;i<x.kids.length;i++) {
             res += astToDom(x.kids[i])
         }
         res += '</vs>'
-        res += '<tog x-state="'+init+'" onclick="seqClick(this, event)">' + right + '</tog>'
+        res += '<tog x-state="row" onclick="seqClick(this, event)">' + right + '</tog>'
         res += "</seq>"
         return res;
     }
@@ -394,16 +390,8 @@
         }
 
         let res = ''
-
-        let init;
-        if (x.kids.length === 2) {
-            init = 'one'
-        } else {
-            init = 'col'
-        }
-
         res += "<map>"
-        res += '<tog x-state="'+init+'" onclick="seqClick(this, event)">{</tog>'
+        res += '<tog x-state="col" onclick="seqClick(this, event)">{</tog>'
 
         res += '<kvs>'
         for (let i=0;i<x.kids.length;i++) {
@@ -413,7 +401,7 @@
             res += astToDom(x.kids[i]);
         }
         res += '</kvs>'
-        res += '<tog x-state="'+init+'" onclick="seqClick(this, event)">}</tog>'
+        res += '<tog x-state="col" onclick="seqClick(this, event)">}</tog>'
         res += "</map>"
         return res;
     }
@@ -435,6 +423,7 @@
             }
         }
     }
+
     function rgba(s) {
         let RGBA = [];
 
@@ -576,19 +565,14 @@
 
     seq:has(> tog[x-state='col']) > vs > * {margin-right: 0px}
 
-    seq:has(> tog[x-state='one']) > vs,
     seq:has(> tog[x-state='row']) > vs {display: inline-flex; flex-direction: row}
     seq:has(> tog[x-state='col']) > vs {display: inline-flex; flex-direction: column;}
 
     /*collapse:*/
-    seq:has(> tog[x-state='no1']) > vs,
     seq:has(> tog[x-state='non']) > vs,
-    map:has(> tog[x-state='no1']) > kvs,
     map:has(> tog[x-state='non']) > kvs
     {height: 0.1px;width: 0.1px; overflow-x: hidden; margin-left: 0px; margin-right: 0px; display: inline-block;}
 
-    tog[x-state='no1']:first-child,
-    tog[x-state='no1']:last-child,
     tog[x-state='non']:first-child,
     tog[x-state='non']:last-child
     /*{height: unset; color:white !important; background-color: black !important; display: initial; width: unset; overflow-x: unset}*/
@@ -597,7 +581,6 @@
     map > kvs > *:nth-child(2n) {margin-left: 10px}
     tog:last-child {align-self: end}
 
-    map:has(> tog[x-state='one']) > kvs,
     map:has(> tog[x-state='row']) > kvs {display: inline-flex; flex-direction: row}
     map:has(> tog[x-state='row']) > kvs > * {margin-left: 10px}
     map:has(> tog[x-state='row']) > kvs > *:first-child {margin-left: 0px}
