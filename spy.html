@@ -366,7 +366,8 @@
     }
 
     function seq(left, x, right) {
-        if (x.kids.length === 0) {
+        let N = x.kids.length;
+        if (N === 0) {
             return gray(left+right)
         }
 
@@ -375,17 +376,18 @@
         res += '<tog x-state="row" onclick="seqClick(this, event)">' + left + '</tog>'
         res += '<vs>'
 
-        for (let i=0;i<x.kids.length;i++) {
+        for (let i=0;i<N;i++) {
             res += astToDom(x.kids[i])
         }
         res += '</vs>'
-        res += '<tog x-state="row" onclick="seqClick(this, event)">' + right + '</tog>'
+        res += '<tog x-state="row" onclick="seqClick(this, event)" n="'+N+'">' + right + '</tog>'
         res += "</seq>"
         return res;
     }
 
     function map(x) {
-        if (x.kids.length === 0) {
+        let N = x.kids.length;
+        if (N === 0) {
             return gray('{}')
         }
 
@@ -394,14 +396,14 @@
         res += '<tog x-state="col" onclick="seqClick(this, event)">{</tog>'
 
         res += '<kvs>'
-        for (let i=0;i<x.kids.length;i++) {
+        for (let i=0;i<N;i++) {
             let k = x.kids[i];
             res += key(astToDom(k), getT(k));
             i++
             res += astToDom(x.kids[i]);
         }
         res += '</kvs>'
-        res += '<tog x-state="col" onclick="seqClick(this, event)">}</tog>'
+        res += '<tog x-state="col" onclick="seqClick(this, event)" n="'+N+'">}</tog>'
         res += "</map>"
         return res;
     }
@@ -580,6 +582,7 @@
 
     map > kvs > *:nth-child(2n) {margin-left: 10px}
     tog:last-child {align-self: end}
+    tog:last-child[x-state='non']::after {content: ' ' attr(n) ' '}
 
     map:has(> tog[x-state='row']) > kvs {display: inline-flex; flex-direction: row}
     map:has(> tog[x-state='row']) > kvs > * {margin-left: 10px}
