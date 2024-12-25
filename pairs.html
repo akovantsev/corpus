@@ -29,7 +29,7 @@
             line-height: 1.1;
         }
         .match {background-color: lightgreen; pointer-events: none;}
-        .cell div {opacity: 0}
+        .cell div {display: none}
     </style>
 </head>
 <body>
@@ -59,8 +59,8 @@
     function openKek(idx) {
         if (OPENIDX2) {
             // remove prev match:
-            document.getElementById(`i${OPENIDX1}`).style.opacity = '0';
-            document.getElementById(`i${OPENIDX2}`).style.opacity = '0';
+            document.getElementById(`i${OPENIDX1}`).style.display = 'none';
+            document.getElementById(`i${OPENIDX2}`).style.display = 'none';
 
             OPENIDX1 = undefined;
             OPENIDX2 = undefined;
@@ -79,7 +79,7 @@
             let img1 = div1.innerText;
             let img2 = div2.innerText;
 
-            div2.style.opacity = "1";
+            div2.style.display = "block";
 
             if (img1===img2) {
                 div1.parentElement.classList.add("match");
@@ -88,7 +88,7 @@
         } else {
             OPENIDX1 = idx;
             let div1 = document.getElementById(`i${OPENIDX1}`);
-            div1.style.opacity = "1";
+            div1.style.display = "block";
         }
     }
 
