@@ -57,15 +57,8 @@
     }
 
     function openKek(idx) {
-        console.log(idx, OPENIDX1, OPENIDX2, ''+OPENIDX2, ''+OPENIDX1);
-        console.log(document.getElementById(`i${OPENIDX1}`));
-        console.log(document.getElementById(`i${OPENIDX2}`));
         if (OPENIDX2) {
-            console.log('kek2', idx, OPENIDX1 ,OPENIDX2);
             // remove prev match:
-
-            console.log(document.getElementById(`i${OPENIDX1}`));
-            console.log(document.getElementById(`i${OPENIDX2}`));
             document.getElementById(`i${OPENIDX1}`).style.opacity = '0';
             document.getElementById(`i${OPENIDX2}`).style.opacity = '0';
 
@@ -75,7 +68,6 @@
             openKek(idx);
 
         } else if (OPENIDX1) {
-            console.log('kek1', idx, OPENIDX1 ,OPENIDX2);
             elScore.innerText = ''+ (parseInt(elScore.innerText) + 1);
 
             if (idx === OPENIDX1) return;
@@ -94,7 +86,6 @@
                 div2.parentElement.classList.add("match");
             }
         } else {
-            console.log('kek0', idx, OPENIDX1 ,OPENIDX2);
             OPENIDX1 = idx;
             let div1 = document.getElementById(`i${OPENIDX1}`);
             div1.style.opacity = "1";
