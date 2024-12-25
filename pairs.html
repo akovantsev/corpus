@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>pairs</title>
+    <style>
+        button {
+            margin: 20px auto;
+            display: block;
+        }
+        #score {
+            width: 100%;
+            margin: 10px 0;
+            text-align: center;
+        }
+        #cards {
+            margin: auto;
+            padding: 10px;
+            width: 230px;
+            display: grid;
+            font-size: 20px;
+            grid-row-gap: 10px;
+            grid-column-gap: 10px;
+            grid-template-columns: repeat(8, auto);
+            background-color: #EEEEEE;
+        }
+        .cell {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            outline: 1px solid grey;
+            line-height: 1.1;
+        }
+        .cell div {opacity: 0}
+        .guessed {
+        }
+
+    </style>
+</head>
+<body>
+<div id="score"></div>
+<div id="cards"></div>
+<style id="openperm"></style>
+<style id="opentemp"></style>
+
+<button onclick="reset()">start over</button>
+<script>
+    let elScore = document.getElementById('score');
+    let elCards = document.getElementById('cards');
+    let elOpenPerm = document.getElementById('openperm');
+    let elOpenTemp = document.getElementById('opentemp');
+    let OPENXY = undefined;
+    let xs = [
+        '😃','😁','😂','😅','🥹','🤣','😊','😉','🙃','🙂',
+        '😇','😌','😍','🥰','😘','😛','😝','😜','🤓','😎',
+        '🥳','🤩','🥸','😏','🥶','🎃','👺','😈','🤬','🤡',
+        '😭','😡',
+    ];
+    xs.push(...xs)
+    reset()
+
+    function openKek(x, y) {
+        if (OPENXY) {
+            elScore.innerText = ''+ (parseInt(elScore.innerText) + 1);
+            let [X, Y] = OPENXY;
+            OPENXY = undefined;
+
+            if (x===X && y===Y) return;
+
+            let img1 = imgGet(X, Y);
+            let img2 = imgGet(x, y);
+            elOpenTemp.innerHTML += `.x${x}.y${y} div {opacity:1} `
+            if (img1===img2) {
+                elOpenPerm.innerHTML += `.x${x}.y${y}, .x${X}.y${Y} {background-color: lightgreen; pointer-events: none;} `
+            }
+        } else {
+            OPENXY = [x,y];
+            elOpenTemp.innerHTML = `.x${x}.y${y} div {opacity:1} `;
+        }
+    }
+
+    function imgGet(x, y) {
+        let idx = x + (8*y);
+        return xs[idx];
+    }
+    function reset() {
+        shuffle(xs);
+
+        elScore.innerHTML = '0';
+        elOpenPerm.innerHTML = '';
+        elOpenTemp.innerHTML = '';
+        elCards.innerHTML = '';
+
+        for (let x=0; x<8; x++) {
+            for (let y=0; y<8; y++) {
+                elCards.innerHTML += `<div class="x${x} y${y} cell" onclick="openKek(${x},${y})"><div>${imgGet(x,y)}</div></div>`;
+            }
+        }
+    }
+
+    function shuffle(xs) {
+        let i = xs.length;
+        while (i !== 0) {
+            let j = Math.floor(Math.random()*i);
+            i--;
+            [xs[i], xs[j]] = [xs[j], xs[i]];
+        }
+    }
+</script>
+</body>
+</html>
