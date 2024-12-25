@@ -4,10 +4,6 @@
     <meta charset="UTF-8">
     <title>pairs</title>
     <style>
-        button {
-            margin: 20px auto;
-            display: block;
-        }
         #score {
             width: 100%;
             margin: 10px 0;
@@ -22,6 +18,7 @@
             grid-row-gap: 10px;
             grid-column-gap: 10px;
             grid-template-columns: repeat(8, auto);
+            user-select: none;
             background-color: #EEEEEE;
         }
         .cell {
@@ -31,22 +28,21 @@
             outline: 1px solid grey;
             line-height: 1.1;
         }
+        .match {background-color: lightgreen; pointer-events: none;}
         .cell div {opacity: 0}
     </style>
 </head>
 <body>
-<div id="score"></div>
+<div id="score">0</div>
 <div id="cards"></div>
 <style id="openperm"></style>
 <style id="opentemp"></style>
 
-<button onclick="reset()">start over</button>
 <script>
     let elScore = document.getElementById('score');
     let elCards = document.getElementById('cards');
-    let elOpenPerm = document.getElementById('openperm');
-    let elOpenTemp = document.getElementById('opentemp');
-    let OPENXY = undefined;
+    let OPENIDX1 = undefined;
+    let OPENIDX2 = undefined;
     let xs = [
         '😃','😁','😂','😅','🥹','🤣','😊','😉','🙃','🙂',
         '😇','😌','😍','🥰','😘','😛','😝','😜','🤓','😎',
@@ -54,44 +50,54 @@
         '😭','😡',
     ];
     xs.push(...xs)
-    reset()
+    shuffle(xs);
 
-    function openKek(x, y) {
-        if (OPENXY) {
+    for (let idx=0; idx<64; idx++) {
+        elCards.innerHTML += `<div class="cell" onclick="openKek(${idx+1})"><div id="i${idx+1}">${xs[idx]}</div></div>`;
+    }
+
+    function openKek(idx) {
+        console.log(idx, OPENIDX1, OPENIDX2, ''+OPENIDX2, ''+OPENIDX1);
+        console.log(document.getElementById(`i${OPENIDX1}`));
+        console.log(document.getElementById(`i${OPENIDX2}`));
+        if (OPENIDX2) {
+            console.log('kek2', idx, OPENIDX1 ,OPENIDX2);
+            // remove prev match:
+
+            console.log(document.getElementById(`i${OPENIDX1}`));
+            console.log(document.getElementById(`i${OPENIDX2}`));
+            document.getElementById(`i${OPENIDX1}`).style.opacity = '0';
+            document.getElementById(`i${OPENIDX2}`).style.opacity = '0';
+
+            OPENIDX1 = undefined;
+            OPENIDX2 = undefined;
+
+            openKek(idx);
+
+        } else if (OPENIDX1) {
+            console.log('kek1', idx, OPENIDX1 ,OPENIDX2);
             elScore.innerText = ''+ (parseInt(elScore.innerText) + 1);
-            let [X, Y] = OPENXY;
-            OPENXY = undefined;
 
-            if (x===X && y===Y) return;
+            if (idx === OPENIDX1) return;
 
-            let img1 = imgGet(X, Y);
-            let img2 = imgGet(x, y);
-            elOpenTemp.innerHTML += `.x${x}.y${y} div {opacity:1} `
+            OPENIDX2 = idx;
+
+            let div1 = document.getElementById(`i${OPENIDX1}`);
+            let div2 = document.getElementById(`i${OPENIDX2}`);
+            let img1 = div1.innerText;
+            let img2 = div2.innerText;
+
+            div2.style.opacity = "1";
+
             if (img1===img2) {
-                elOpenPerm.innerHTML += `.x${x}.y${y}, .x${X}.y${Y} {background-color: lightgreen; pointer-events: none;} `
+                div1.parentElement.classList.add("match");
+                div2.parentElement.classList.add("match");
             }
         } else {
-            OPENXY = [x,y];
-            elOpenTemp.innerHTML = `.x${x}.y${y} div {opacity:1} `;
-        }
-    }
-
-    function imgGet(x, y) {
-        let idx = x + (8*y);
-        return xs[idx];
-    }
-    function reset() {
-        shuffle(xs);
-
-        elScore.innerHTML = '0';
-        elOpenPerm.innerHTML = '';
-        elOpenTemp.innerHTML = '';
-        elCards.innerHTML = '';
-
-        for (let x=0; x<8; x++) {
-            for (let y=0; y<8; y++) {
-                elCards.innerHTML += `<div class="x${x} y${y} cell" onclick="openKek(${x},${y})"><div>${imgGet(x,y)}</div></div>`;
-            }
+            console.log('kek0', idx, OPENIDX1 ,OPENIDX2);
+            OPENIDX1 = idx;
+            let div1 = document.getElementById(`i${OPENIDX1}`);
+            div1.style.opacity = "1";
         }
     }
 
