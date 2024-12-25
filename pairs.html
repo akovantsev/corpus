@@ -9,9 +9,7 @@
             margin: 10px 0;
             text-align: center;
         }
-        .board:has(> .todo) + .board {display: none}
-        .board:not(:has(> .todo)) {display: none}
-        .board {
+        #cards {
             margin: auto;
             padding: 10px;
             width: fit-content;
@@ -19,6 +17,7 @@
             font-size: 40px;
             grid-row-gap: 10px;
             grid-column-gap: 10px;
+            grid-template-columns: repeat(8, auto);
             user-select: none;
             background-color: #EEEEEE;
         }
@@ -36,77 +35,60 @@
 </head>
 <body>
 <div id="score">0</div>
-<div id="boards"></div>
+<div id="cards"></div>
+<style id="openperm"></style>
+<style id="opentemp"></style>
 
 <script>
     let elScore = document.getElementById('score');
-    let elBoards = document.getElementById('boards');
-    let ID1 = undefined;
-    let ID2 = undefined;
-    let seeds = [
+    let elCards = document.getElementById('cards');
+    let OPENIDX1 = undefined;
+    let OPENIDX2 = undefined;
+    let xs = [
         '😃','😁','😂','😅','🥹','🤣','😊','😉','🙃','🙂',
         '😇','😌','😍','🥰','😘','😛','😝','😜','🤓','😎',
         '🥳','🤩','🥸','😏','🥶','🎃','👺','😈','🤬','🤡',
         '😭','😡',
     ];
+    xs.push(...xs)
+    shuffle(xs);
 
-    [2, 4, 6, 8].forEach((n, IDX) => {
-        let N = n*n;
-        let xs = seeds.splice(0, N/2);
-        xs.push(...xs)
-        shuffle(xs);
+    for (let idx=0; idx<64; idx++) {
+        elCards.innerHTML += `<div class="cell" onclick="openKek(${idx+1})"><div id="i${idx+1}">${xs[idx]}</div></div>`;
+    }
 
-        let board = `<div class="board" style="grid-template-columns: repeat(${n}, auto)">`;
-
-        for (let idx=0; idx<N; idx++) {
-            let ico = xs[idx];
-            let id = `i${IDX}-${idx}`
-            board += `<div class="cell todo" onclick="openKek('${id}')"><div id="${id}">${ico}</div></div>`;
-        }
-
-        board += `</div>`;
-        elBoards.innerHTML += board;
-
-    })
-
-    elBoards.innerHTML += `<div class="board"><img class="todo" height="180" width="280" src="data:image/jpeg;base64,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" ></div>`
-
-    function openKek(id) {
-        if (ID2) {
+    function openKek(idx) {
+        if (OPENIDX2) {
             // remove prev match:
-            document.getElementById(ID1).style.display = 'none';
-            document.getElementById(ID2).style.display = 'none';
+            document.getElementById(`i${OPENIDX1}`).style.display = 'none';
+            document.getElementById(`i${OPENIDX2}`).style.display = 'none';
 
-            ID1 = undefined;
-            ID2 = undefined;
+            OPENIDX1 = undefined;
+            OPENIDX2 = undefined;
 
-            openKek(id);
+            openKek(idx);
 
-        } else if (ID1) {
+        } else if (OPENIDX1) {
             elScore.innerText = ''+ (parseInt(elScore.innerText) + 1);
 
-            if (id === ID1) return;
+            if (idx === OPENIDX1) return;
 
-            ID2 = id;
+            OPENIDX2 = idx;
 
-            let div1 = document.getElementById(ID1);
-            let div2 = document.getElementById(ID2);
+            let div1 = document.getElementById(`i${OPENIDX1}`);
+            let div2 = document.getElementById(`i${OPENIDX2}`);
             let img1 = div1.innerText;
             let img2 = div2.innerText;
 
             div2.style.display = "block";
 
             if (img1===img2) {
-                div1.parentElement.classList.remove("todo");
-                div2.parentElement.classList.remove("todo");
                 div1.parentElement.classList.add("match");
                 div2.parentElement.classList.add("match");
-            } else {
-
             }
         } else {
-            ID1 = id;
-            let div1 = document.getElementById(ID1);
+            OPENIDX1 = idx;
+            let div1 = document.getElementById(`i${OPENIDX1}`);
             div1.style.display = "block";
         }
     }
