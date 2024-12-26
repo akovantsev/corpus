@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>8 pairs</title>
+    <title>12 pairs</title>
     <style>
         #score {
             font-family: "Courier New", Courier, monospace;
@@ -54,11 +54,12 @@
         '🍑','🍋',
     ];
 
-    [8].forEach((n, IDX) => {
+    [12].forEach((n, IDX) => {
         let N = n*n;
         let xs = seeds.slice(0, N/2);
         xs.push(...xs)
         shuffle(xs);
+
 
         let board = `<div class="board" style="grid-template-columns: repeat(${n}, auto)">`;
 
