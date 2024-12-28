@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>diffs</title>
+    <style>
+        #score, #timer {
+            font-family: "Courier New", Courier, monospace;
+            font-size: 20px;
+            width: 100%;
+            margin: 10px 0;
+            text-align: center;
+        }
+        #boards {
+            display: flex;
+            margin: auto;
+            justify-content: center;
+        }
+        .board {
+            margin: 10px;
+            padding: 10px;
+            width: fit-content;
+            display: grid;
+            font-size: 40px;
+            grid-row-gap: 10px;
+            grid-column-gap: 10px;
+            user-select: none;
+            background-color: #EEEEEE;
+            border-radius: 3px;
+        }
+        .cell:hover {
+            background-color: lightgreen;
+        }
+        .cell {
+            touch-action: manipulation;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            line-height: 1.1;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+<div id="timer">180</div>
+<div id="score">0</div>
+<div id="boards"></div>
+
+<script>
+    let elScore = document.getElementById('score');
+    let elBoards = document.getElementById('boards');
+    let elTimer = document.getElementById('timer');
+    let seeds = [
+        '😃','😁','😂','😅','🥹','🤣','😊','😉','🙃','🙂',
+        '😇','😌','😍','🥰','😘','😛','😝','😜','🤓','😎',
+        '🥳','🤩','🥸','😏','🥶','🎃','👺','😈','🤬','🤡',
+        '😭','😡','🤢','🍆','👽','🤖','💀','🍉','🧠','😵',
+        '🤯','🤪','😻','💋','🧵','🦊','🐣','🐥','🍄','🌚',
+        '🍔','🍟','🍕','🌮','🌯','🧀','🥩','🍳','🥐','🥨',
+        '🥕','🥒','🌶','🫑','🌽','🫛','🥑','🥥','🥝','🍒',
+        '🍑','🍋','🍏','🍎','🍊','🍌','🍜','🍣','🍥','🍱',
+        '🍩','🍭','🍰','🫖','🍵','☕️','🍚','🥪','🌭','🍅',
+        '🌕','🌖','🌗','🌘','🌑','🌝','🌞','☘️','🍀','🌲',
+        '🧐',
+    ];
+
+    let timer = setInterval(function () {
+        let t = parseInt(elTimer.innerText);
+        if (t===0) {
+            clearInterval(timer);
+            elBoards.style.pointerEvents = 'none';
+            elBoards.style.opacity = '0.4';
+        } else {
+            elTimer.innerText = '' + (t-1);
+        }
+
+    }, 1000);
+
+    render();
+
+    function render() {
+        shuffle(seeds);
+
+        let N = 10;
+        let NN = N*N;
+        let xs = seeds.slice(0, NN);
+        let ys = seeds.slice(0, NN);
+        let idx = rand(NN-1);
+        ys[idx] = seeds[NN];
+
+        elBoards.innerHTML = '';
+
+        [xs, ys].forEach(coll => {
+            let board = `<div class="board" style="grid-template-columns: repeat(${N}, auto)">`;
+
+            for (let idx=0; idx<NN; idx++) {
+                let ico = coll[idx];
+                let cls = `i${idx}`
+                board += `<div class="cell ${cls}" onclick="kek('${cls}')">${ico}</div>`;
+            }
+
+            board += `</div>`;
+            elBoards.innerHTML += board;
+        })
+    }
+
+    function kek(cls) {
+        let cells = document.querySelectorAll(`.${cls}`);
+
+        if (cells[0].innerText === cells[1].innerText) {
+            elScore.innerText = '' + (parseInt(elScore.innerText) - 1);
+        } else {
+            elScore.innerText = '' + (parseInt(elScore.innerText) + 1);
+        }
+
+        render();
+    }
+
+    function rand(max) {
+        return Math.floor(Math.random() * max);
+    }
+
+    function shuffle(xs) {
+        let i = xs.length;
+        while (i !== 0) {
+            let j = Math.floor(Math.random()*i);
+            i--;
+            [xs[i], xs[j]] = [xs[j], xs[i]];
+        }
+    }
+</script>
+</body>
+</html>
