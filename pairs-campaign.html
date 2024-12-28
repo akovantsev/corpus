@@ -23,6 +23,7 @@
             grid-column-gap: 10px;
             user-select: none;
             background-color: #EEEEEE;
+            border-radius: 3px;
         }
         .cell {
             touch-action: manipulation;
@@ -31,6 +32,7 @@
             cursor: pointer;
             outline: 1px solid grey;
             line-height: 1.1;
+            border-radius: 3px;
         }
         .match {background-color: lightgreen; pointer-events: none;}
         .cell div {display: none}
@@ -90,8 +92,6 @@
             openKek(id);
 
         } else if (ID1) {
-            elScore.innerText = ''+ (parseInt(elScore.innerText) + 1);
-
             if (id === ID1) return;
 
             ID2 = id;
@@ -109,7 +109,7 @@
                 div1.parentElement.classList.add("match");
                 div2.parentElement.classList.add("match");
             } else {
-
+                elScore.innerText = ''+ (parseInt(elScore.innerText) + 1);
             }
         } else {
             ID1 = id;
