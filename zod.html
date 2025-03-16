@@ -84,9 +84,9 @@
 </head>
 <body>
 <div style="display: flex; justify-content: center; gap:20px">
-    <button id="countess" onclick="collectHell()"></button>
-    <button id="transmute" onclick="transmute()"></button>
-    <button id="clicks" disabled></button>
+    <button id="countess" onclick="collectHell()">countess</button>
+    <button id="transmute" onclick="transmute()">transmute</button>
+    <button id="clicks" disabled>clicks</button>
 </div>
 <div id="stats"></div>
 <div id="app"></div>
@@ -133,12 +133,6 @@
     function dbWrite() {
         localStorage.setItem('inventory', JSON.stringify(INVENTORY));
         localStorage.setItem('stats', JSON.stringify(STATS));
-    }
-
-    function  sortInv() {
-        INVENTORY.sort();
-        dbWrite();
-        window.location.reload();
     }
 
     function select(e) {
