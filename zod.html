@@ -325,6 +325,11 @@
       [false, 75]
     ];
 
+    let GEMS_NODROP_TABLE = [
+        [true, 25],
+        [false, 75]
+    ];
+
     let GEMS_TABLE = [
         ['TOPAZ1', 10],
         ['AMETHYST1', 9],
@@ -364,9 +369,9 @@
             }
         }
 
-        // if (!roll(GEMS_NODROP_TABLE)) {
+        if (!roll(GEMS_NODROP_TABLE)) {
             runes.push(roll(GEMS_TABLE));
-        // }
+        }
         return runes;
     }
 
