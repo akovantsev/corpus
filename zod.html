@@ -148,21 +148,28 @@
             }
         }
         STATS['clicks'] = (STATS['clicks'] || 0) + 1;
-        dbWrite();
-        renderStats();
+
+        let rune = canTransmute();
+
+        if (rune) {
+            transmute();
+        } else {
+            dbWrite();
+            renderStats();
+        }
     }
 
-    function transmute() {
+    function canTransmute() {
         let xs = [];
         selected.forEach(dom => {
             xs.push(dom.getAttribute('class'));
-            dom.removeAttribute('sel');
         })
-
         xs.sort();
-        let recipe = xs.join("-");
-        // console.log(recipe, RECIPES[recipe]);
-        let rune = RECIPES[recipe];
+        return RECIPES[xs.join("-")];
+    }
+
+    function transmute() {
+        let rune = canTransmute();
 
         if (rune) {
             selected.forEach(dom => {
@@ -172,13 +179,15 @@
             });
             INVENTORY.push(rune);
             renderCell(rune);
-            // console.log(selected)
             STATS['transmutes'] = (STATS['transmutes'] || 0) + 1;
         }
 
         STATS['clicks'] = (STATS['clicks'] || 0) + 1;
         dbWrite();
         renderStats();
+        selected.forEach(dom => {
+            dom.removeAttribute('sel');
+        })
         selected = [];
     }
 
