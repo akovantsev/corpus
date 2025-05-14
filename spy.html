@@ -6,8 +6,7 @@
 
 <style type="text/css">
     body {line-height: 1.5}
-    #reconnect {position: fixed; top:10px; right:10px}
-    #buttons {position: fixed; top:10px; left: 10px}
+    #buttons {position: fixed; top:10px; right: 10px}
 
     details {margin-bottom: 10px}
     summary {cursor: pointer; background-color: #cdffee;}
@@ -20,9 +19,9 @@
     summary pre {margin: 0; display: inline-block; background: aliceblue;}
 </style>
 
-<button id="reconnect" onclick="connect()">reconnect</button>
 
 <div id="buttons">
+    <button id="reconnect" onclick="connect()">reconnect</button>
     <button onclick="pip()">popout</button>
     <button onclick="closeAll()">close all</button>
     <button onclick="openAll()">open all</button>
@@ -65,16 +64,19 @@
     function onopen    (e) {
         console.warn('connected');
         details(null, "connected");
+        setFavicon('🟢')
         document.getElementById('reconnect').setAttribute('style', 'display:none')
     }
     function onclose   (e) {
         console.error('disconnected');
         details(null, "disconnected");
+        setFavicon('🔴')
         document.getElementById('reconnect').setAttribute('style', 'display:block')
     }
 
     function onmessage (e) {
         details(null, 'from socket', render(e.data));
+        refreshTitleCount()
     }
     connect();
 
@@ -90,7 +92,7 @@
 
     function closeAll() {document.querySelectorAll('details').forEach((e)=>{e.removeAttribute('open')})}
     function openAll()  {document.querySelectorAll('details').forEach((e)=>{e.setAttribute('open', "1")})}
-    function clearAll() {document.getElementById('spy').innerHTML = ""}
+    function clearAll() {document.getElementById('spy').innerHTML = ""; refreshTitleCount()}
     function pretty(x) {return JSON.stringify(x, null, 2)}
 
     function jsonToAst(str) {
@@ -472,8 +474,19 @@
         }
     }
 
+    function htmlEsc(s) {
+        let s2 = s.replaceAll("&", "&amp;")
+        console.log(s2);
+        return s2
+            .replaceAll("&", "&amp;")
+            .replaceAll("<", "&lt;")
+            .replaceAll(">", "&gt;")
+            .replaceAll('"', "&quot;")
+            .replaceAll("'", "&#039;");
+    }
     function astToDom (ast) {
-        let w = ast.word;
+        let w = ast.word && htmlEsc(ast.word);
+        // console.log(ast , w)
         switch (ast.type) {
             case 'lit': return mage(w)
             case 'str': return str(w)
@@ -508,10 +521,29 @@
     function key(x, t) {return '<key t="'+ escape(t)+'">'+ x +'</key>'}
     // function val(x, t) {return '<key t="'+ escape(t)+'">'+ x +'</key>'}
 
+    function refreshTitleCount() {
+        document.querySelector('head > title').innerHTML = (''+document.querySelectorAll('summary').length);
+    }
+    function setFavicon(emoji) {
+        let href = `data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>${emoji}</text></svg>`;
+        document.querySelector('head > link[rel="icon"]').setAttribute('href', href);
+    }
+    function dateStr(dt) {
+        dt = dt || new Date();
+        let pad = v => `0${v}`.slice(-2);
+        let YYYY = dt.getFullYear();
+        let MM = pad(1+dt.getMonth());
+        let DD = pad(dt.getDate());
+        let hh = pad(dt.getHours());
+        let mm = pad(dt.getMinutes());
+        let ss = pad(dt.getSeconds());
+        return `${YYYY}-${MM}-${DD} ${hh}:${mm}:${ss}`;
+    }
+
     function details(color, summary, body) {
         let div = document.createElement('DIV')
         all.append(div);
-        div.innerHTML = '<details><summary>'+ new Date() + ' '+ summary +'</summary>' + body + '</details>'
+        div.innerHTML = '<details open><summary>'+dateStr()+' '+ summary+'</summary>' + body + '</details>'
     }
     function render(s) {
         try {
@@ -532,6 +564,7 @@
         let text = input.value;
         details(null, 'paste', render(text));
         input.value = '';
+        refreshTitleCount();
     }
 </script>
 
